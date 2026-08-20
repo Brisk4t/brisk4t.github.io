@@ -5,7 +5,10 @@ const blog = defineCollection({
 	loader: glob({ pattern: '**/*.md', base: './src/content/blog' }),
 	schema: z.object({
 		title: z.string(),
+		// Short subtitle shown on the tile by default.
 		description: z.string(),
+		// Longer blurb shown on the tile in place of description on hover. Omit to keep description on hover too.
+		longDescription: z.string().optional(),
 		pubDate: z.coerce.date(),
 		updatedDate: z.coerce.date().optional(),
 		tags: z.array(z.string()).default([]),
@@ -20,7 +23,10 @@ const labs = defineCollection({
 	loader: glob({ pattern: '**/*.md', base: './src/content/labs' }),
 	schema: z.object({
 		title: z.string(),
+		// Short subtitle shown on the tile by default.
 		description: z.string(),
+		// Longer blurb shown on the tile in place of description on hover. Omit to keep description on hover too.
+		longDescription: z.string().optional(),
 		pubDate: z.coerce.date(),
 		tags: z.array(z.string()).default([]),
 		// Must match the folder name under src/pages/lab/<slug>/

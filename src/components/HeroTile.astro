@@ -1,0 +1,109 @@
+---
+interface Props {
+	href: string;
+	title: string;
+	description: string;
+	longDescription?: string;
+	heroImage?: string;
+	heroImageAlt?: string;
+	accent?: string;
+	date?: Date;
+}
+
+const { href, title, description, longDescription, heroImage, heroImageAlt, accent, date } = Astro.props;
+---
+
+<li class="tile" style={accent ? `--accent: ${accent}` : undefined}>
+	{date && (
+		<time class="date" datetime={date.toISOString()}>
+			{date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+		</time>
+	)}
+	<a href={href}>
+		{heroImage && <img class="thumb" src={heroImage} alt={heroImageAlt ?? ''} loading="lazy" />}
+		<div class="overlay" />
+		<div class="body">
+			<span class="title">{title}</span>
+			<div class="desc-stack">
+				<p class="description">{description}</p>
+				{longDescription && <p class="description-long">{longDescription}</p>}
+			</div>
+		</div>
+	</a>
+</li>
+
+<style>
+	.tile {
+		position: relative;
+		border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+		border-radius: 0.5rem;
+		background: var(--accent, color-mix(in srgb, currentColor 12%, transparent));
+		transition: transform 0.15s ease, box-shadow 0.15s ease;
+	}
+	.tile:hover {
+		transform: translate(-4px, -4px);
+		box-shadow: 4px 4px 0 0 #fff;
+	}
+	.date {
+		position: absolute;
+		bottom: 100%;
+		right: 0.15rem;
+		margin-bottom: 0.35rem;
+		font-size: 0.75rem;
+		opacity: 0.7;
+	}
+	.tile > a {
+		position: relative;
+		display: block;
+		height: 100%;
+		min-height: 8rem;
+		padding: 1rem;
+		color: #fff;
+		text-decoration: none;
+		border-radius: inherit;
+		overflow: hidden;
+	}
+	.thumb {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.3s ease, filter 0.3s ease;
+	}
+	.tile:hover .thumb {
+		transform: scale(1.08);
+		filter: blur(2px);
+	}
+	.overlay {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+	}
+	.body {
+		position: relative;
+		font-weight: 400;
+		font-size: 1.125rem;
+	}
+	.title {
+		font-weight: 600;
+		font-size: 1.25rem;
+	}
+	.desc-stack {
+		display: grid;
+	}
+	.desc-stack > p {
+		grid-area: 1 / 1;
+		transition: opacity 0.25s ease;
+	}
+	.description-long {
+		opacity: 0;
+		font-size: 0.85rem;
+	}
+	.tile:hover:has(.description-long) .description {
+		opacity: 0;
+	}
+	.tile:hover .description-long {
+		opacity: 1;
+	}
+</style>

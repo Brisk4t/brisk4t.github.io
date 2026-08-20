@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroTile from '../components/HeroTile.astro';
 import { getCollection } from 'astro:content';
 
 const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
@@ -20,44 +21,38 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	</section>
 
 	<section>
-		<h2>Latest posts</h2>
+		<h2>Dev Blog</h2>
 		<ul class="grid">
 			{
 				posts.slice(0, 4).map((post) => (
-					<li class="post-card">
-						<a href={`/blog/${post.id}/`}>
-							<div class="body">
-								<span class="title">{post.data.title}</span>
-								<p>{post.data.description}</p>
-							</div>
-							{post.data.heroImage && (
-								<img class="thumb" src={post.data.heroImage} alt={post.data.heroImageAlt ?? ''} loading="lazy" />
-							)}
-						</a>
-					</li>
+					<HeroTile
+						href={`/blog/${post.id}/`}
+						title={post.data.title}
+						description={post.data.description}
+						longDescription={post.data.longDescription}
+						heroImage={post.data.heroImage}
+						heroImageAlt={post.data.heroImageAlt}
+						date={post.data.pubDate}
+					/>
 				))
 			}
 		</ul>
 		<a href="/blog/">See all &rarr;</a>
 	</section>
 
-		<section>
-		<h2>Latest lab pieces</h2>
+	<section>
+		<h2>Scrapbooking With Code</h2>
 		<ul class="grid">
 			{
 				labs.slice(0, 4).map((lab) => (
-					<li class="lab-card" style={`--accent: ${lab.data.accent}`}>
-						<a href={`/lab/${lab.data.slug}/`}>
-							{lab.data.heroImage && (
-								<img class="thumb" src={lab.data.heroImage} alt={lab.data.heroImageAlt ?? ''} loading="lazy" />
-							)}
-							<div class="overlay" />
-							<div class="body">
-								<span class="title">{lab.data.title}</span>
-								<p>{lab.data.description}</p>
-							</div>
-						</a>
-					</li>
+					<HeroTile
+						href={`/lab/${lab.data.slug}/`}
+						title={lab.data.title}
+						description={lab.data.description}
+						longDescription={lab.data.longDescription}
+						heroImage={lab.data.heroImage}
+						heroImageAlt={lab.data.heroImageAlt}
+					/>
 				))
 			}
 		</ul>
@@ -84,78 +79,5 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		display: grid;
 		gap: 1rem;
 		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-	}
-	.grid li {
-		border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
-		border-radius: 0.5rem;
-		padding: 1rem;
-		transition: transform 0.15s ease, box-shadow 0.15s ease;
-	}
-	.grid li:hover {
-		transform: translate(-4px, -4px);
-		box-shadow: 4px 4px 0 0 #fff;
-	}
-	.grid li.post-card {
-		padding: 0;
-		overflow: hidden;
-	}
-	.post-card > a {
-		display: flex;
-		align-items: stretch;
-		gap: 1rem;
-		height: 100%;
-		color: inherit;
-		text-decoration: none;
-	}
-	.post-card .body {
-		flex: 1;
-		min-width: 0;
-		padding: 1rem 0 1rem 1.25rem;
-	}
-	.post-card .title {
-		font-weight: 600;
-	}
-	.post-card > a:hover .title {
-		text-decoration: underline;
-	}
-	.post-card .thumb {
-		width: 10rem;
-		flex-shrink: 0;
-		object-fit: cover;
-	}
-	.grid li.lab-card {
-		padding: 0;
-		overflow: hidden;
-		background: var(--accent, #6366f1);
-	}
-	.lab-card > a {
-		position: relative;
-		display: block;
-		height: 100%;
-		min-height: 8rem;
-		padding: 1rem;
-		color: #fff;
-		text-decoration: none;
-	}
-	.lab-card .thumb {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-	.lab-card .overlay {
-		position: absolute;
-		inset: 0;
-		background: rgba(0, 0, 0, 0.5);
-	}
-	.lab-card .body {
-		position: relative;
-	}
-	.lab-card .title {
-		font-weight: 600;
-	}
-	.lab-card > a:hover .title {
-		text-decoration: underline;
 	}
 </style>

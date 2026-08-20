@@ -20,6 +20,11 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 								{post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
 							</time>
 							<p>{post.data.description}</p>
+							<ul class="tags">
+								{post.data.tags.map((tag) => (
+									<li>{tag}</li>
+								))}
+							</ul>
 						</div>
 						{post.data.heroImage && (
 							<img class="thumb" src={post.data.heroImage} alt={post.data.heroImageAlt ?? ''} loading="lazy" />
@@ -73,5 +78,19 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		font-size: 0.8rem;
 		opacity: 0.6;
 		margin: 0.15rem 0 0.4rem;
+	}
+	.tags {
+		display: flex;
+		gap: 0.4rem;
+		list-style: none;
+		padding: 0;
+		margin: 0.75rem 0 0;
+		font-size: 0.75rem;
+		opacity: 0.7;
+	}
+	.tags li {
+		border: 1px solid currentColor;
+		border-radius: 999px;
+		padding: 0.1rem 0.5rem;
 	}
 </style>

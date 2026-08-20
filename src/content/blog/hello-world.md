@@ -1,6 +1,7 @@
 ---
 title: Hello, world
 description: Kicking off the blog.
+longDescription: This is a much longer description to tell you about the woes of the world and the inferiority of bananas.
 pubDate: 2026-08-20T09:00:00Z
 tags: [meta]
 heroImage: /blog/hello-world/cover.svg
