@@ -1,0 +1,55 @@
+---
+const links = [
+	{ href: '/', label: 'Home' },
+	{ href: '/blog/', label: 'Blog' },
+	{ href: '/lab/', label: 'Lab' },
+];
+const path = Astro.url.pathname;
+---
+
+<nav class="site-nav">
+	<a class="brand" href="/">brisk4t</a>
+	<ul>
+		{
+			links.map((link) => (
+				<li>
+					<a href={link.href} aria-current={path === link.href ? 'page' : undefined}>
+						{link.label}
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</nav>
+
+<style>
+	.site-nav {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1rem 1.5rem;
+		font-family: system-ui, sans-serif;
+	}
+	.brand {
+		font-weight: 700;
+		text-decoration: none;
+		color: inherit;
+		letter-spacing: -0.02em;
+	}
+	ul {
+		display: flex;
+		gap: 1.25rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	a {
+		text-decoration: none;
+		color: inherit;
+		opacity: 0.7;
+	}
+	a:hover,
+	a[aria-current='page'] {
+		opacity: 1;
+	}
+</style>

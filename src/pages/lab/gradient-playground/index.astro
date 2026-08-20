@@ -1,0 +1,42 @@
+---
+// This page intentionally does NOT use BaseLayout — it owns its entire <html>,
+// fonts, and theme. Only the hub-provided MinimalShell back-link is opted into.
+import MinimalShell from '../../../layouts/MinimalShell.astro';
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Gradient Playground · brisk4t lab</title>
+	</head>
+	<body>
+		<MinimalShell />
+		<main>
+			<h1>Gradient Playground</h1>
+			<p>Nothing here is shared with the rest of the site &mdash; different font, different palette, its own layout.</p>
+		</main>
+	</body>
+</html>
+
+<style>
+	:global(body) {
+		margin: 0;
+		min-height: 100vh;
+		display: grid;
+		place-items: center;
+		font-family: 'Courier New', monospace;
+		color: #fff;
+		background: radial-gradient(circle at 20% 20%, #f97316, transparent 60%),
+			radial-gradient(circle at 80% 80%, #ec4899, transparent 60%), #0f0f12;
+		text-align: center;
+	}
+	main {
+		max-width: 32rem;
+		padding: 2rem;
+	}
+	h1 {
+		font-size: 2.5rem;
+		margin-bottom: 0.5rem;
+	}
+</style>

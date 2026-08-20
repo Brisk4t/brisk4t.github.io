@@ -1,0 +1,66 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<BaseLayout title="Lab" description="A scrapbook of self-contained UI experiments.">
+	<h1>Lab</h1>
+	<p>Every piece here is a self-contained page &mdash; its own styling, sometimes its own framework. Adding a new one is a folder plus a registry entry; nothing here has to be touched.</p>
+
+	<ul class="cards">
+		{
+			labs.map((lab) => (
+				<li style={`--accent: ${lab.data.accent}`}>
+					<a href={`/lab/${lab.data.slug}/`}>
+						<h2>{lab.data.title}</h2>
+						<p>{lab.data.description}</p>
+						<ul class="tags">
+							{lab.data.tags.map((tag) => (
+								<li>{tag}</li>
+							))}
+						</ul>
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</BaseLayout>
+
+<style>
+	.cards {
+		list-style: none;
+		padding: 0;
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	}
+	.cards li {
+		border-top: 3px solid var(--accent, #6366f1);
+		border-radius: 0.5rem;
+		background: color-mix(in srgb, currentColor 6%, transparent);
+	}
+	.cards a {
+		display: block;
+		padding: 1rem;
+		color: inherit;
+		text-decoration: none;
+	}
+	.tags {
+		display: flex;
+		gap: 0.4rem;
+		list-style: none;
+		padding: 0;
+		margin: 0.75rem 0 0;
+		font-size: 0.75rem;
+		opacity: 0.7;
+	}
+	.tags li {
+		border: 1px solid currentColor;
+		border-radius: 999px;
+		padding: 0.1rem 0.5rem;
+	}
+</style>

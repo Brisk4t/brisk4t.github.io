@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<BaseLayout title="Home">
+	<section>
+		<h1>Brisk4t</h1>
+		<p>Portfolio, blog, and a scrapbook of UI experiments &mdash; each one built as its own self-contained page.</p>
+	</section>
+
+	<section>
+		<h2>Latest lab pieces</h2>
+		<ul class="grid">
+			{
+				labs.slice(0, 4).map((lab) => (
+					<li>
+						<a href={`/lab/${lab.data.slug}/`}>{lab.data.title}</a>
+						<p>{lab.data.description}</p>
+					</li>
+				))
+			}
+		</ul>
+		<a href="/lab/">See all &rarr;</a>
+	</section>
+
+	<section>
+		<h2>Latest posts</h2>
+		<ul class="grid">
+			{
+				posts.slice(0, 4).map((post) => (
+					<li>
+						<a href={`/blog/${post.id}/`}>{post.data.title}</a>
+						<p>{post.data.description}</p>
+					</li>
+				))
+			}
+		</ul>
+		<a href="/blog/">See all &rarr;</a>
+	</section>
+</BaseLayout>
+
+<style>
+	.grid {
+		list-style: none;
+		padding: 0;
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	}
+	.grid li {
+		border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+		border-radius: 0.5rem;
+		padding: 1rem;
+	}
+</style>

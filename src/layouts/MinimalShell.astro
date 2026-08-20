@@ -1,0 +1,27 @@
+---
+// Opt-in only. Drop this into a fully custom lab/<slug>/index.astro page when you
+// still want a way back to the hub — it brings a single link, nothing else.
+// Skip it entirely if a piece wants to be a true full-bleed takeover.
+---
+
+<a class="back-to-hub" href="/lab/">&larr; brisk4t.github.io</a>
+
+<style>
+	.back-to-hub {
+		position: fixed;
+		top: 0.75rem;
+		left: 0.75rem;
+		z-index: 9999;
+		font-family: system-ui, sans-serif;
+		font-size: 0.75rem;
+		text-decoration: none;
+		color: #fff;
+		background: rgba(0, 0, 0, 0.65);
+		backdrop-filter: blur(4px);
+		padding: 0.4rem 0.7rem;
+		border-radius: 999px;
+	}
+	.back-to-hub:hover {
+		background: rgba(0, 0, 0, 0.85);
+	}
+</style>
