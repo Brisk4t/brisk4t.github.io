@@ -5,4 +5,6 @@ pubDate: 2026-08-20
 tags: [css, demo]
 slug: gradient-playground
 accent: "#f97316"
+heroImage: /lab/gradient-playground/cover.svg
+heroImageAlt: Orange-to-indigo diagonal gradient
 ---

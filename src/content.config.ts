@@ -27,6 +27,9 @@ const labs = defineCollection({
 		slug: z.string(),
 		// Optional accent color for the card on the /lab index (each island can pick its own)
 		accent: z.string().default('#6366f1'),
+		// Path into public/, e.g. /lab/my-lab/cover.svg. Omit for a solid accent-colored tile.
+		heroImage: z.string().optional(),
+		heroImageAlt: z.string().optional(),
 		draft: z.boolean().default(false),
 	}),
 });

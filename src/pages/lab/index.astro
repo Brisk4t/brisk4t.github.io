@@ -16,13 +16,19 @@ const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
 			labs.map((lab) => (
 				<li style={`--accent: ${lab.data.accent}`}>
 					<a href={`/lab/${lab.data.slug}/`}>
-						<h2>{lab.data.title}</h2>
-						<p>{lab.data.description}</p>
-						<ul class="tags">
-							{lab.data.tags.map((tag) => (
-								<li>{tag}</li>
-							))}
-						</ul>
+						{lab.data.heroImage && (
+							<img class="thumb" src={lab.data.heroImage} alt={lab.data.heroImageAlt ?? ''} loading="lazy" />
+						)}
+						<div class="overlay" />
+						<div class="body">
+							<h2>{lab.data.title}</h2>
+							<p>{lab.data.description}</p>
+							<ul class="tags">
+								{lab.data.tags.map((tag) => (
+									<li>{tag}</li>
+								))}
+							</ul>
+						</div>
 					</a>
 				</li>
 			))
@@ -39,15 +45,40 @@ const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
 		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 	}
 	.cards li {
-		border-top: 3px solid var(--accent, #6366f1);
-		border-radius: 0.5rem;
-		background: color-mix(in srgb, currentColor 6%, transparent);
+		border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+		border-radius: 0.75rem;
+		overflow: hidden;
+		background: var(--accent, #6366f1);
 	}
 	.cards a {
+		position: relative;
 		display: block;
+		min-height: 12rem;
 		padding: 1rem;
-		color: inherit;
+		color: #fff;
 		text-decoration: none;
+	}
+	.thumb {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.overlay {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+	}
+	.body {
+		position: relative;
+	}
+	.cards h2 {
+		margin: 0;
+		font-size: 1.1rem;
+	}
+	.cards a:hover h2 {
+		text-decoration: underline;
 	}
 	.tags {
 		display: flex;
@@ -56,7 +87,7 @@ const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
 		padding: 0;
 		margin: 0.75rem 0 0;
 		font-size: 0.75rem;
-		opacity: 0.7;
+		opacity: 0.85;
 	}
 	.tags li {
 		border: 1px solid currentColor;
