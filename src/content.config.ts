@@ -9,6 +9,9 @@ const blog = defineCollection({
 		pubDate: z.coerce.date(),
 		updatedDate: z.coerce.date().optional(),
 		tags: z.array(z.string()).default([]),
+		// Path into public/, e.g. /blog/my-post/cover.jpg. Omit for a text-only tile.
+		heroImage: z.string().optional(),
+		heroImageAlt: z.string().optional(),
 		draft: z.boolean().default(false),
 	}),
 });

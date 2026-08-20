@@ -30,12 +30,14 @@ Add a Markdown file to `src/content/blog/`, e.g. `src/content/blog/my-post.md`:
 ---
 title: My Post
 description: One line.
-pubDate: 2026-08-20
+pubDate: 2026-08-20T09:00:00Z
 tags: [notes]
 ---
 
 Body in Markdown.
 ```
+
+`pubDate` accepts a full ISO 8601 datetime (date-only also works, but is treated as midnight UTC — two posts on the same day with no time will tie and fall back to arbitrary order). Use a `Z`-suffixed UTC time so ordering is deterministic regardless of where the site is built.
 
 It shows up at `/blog/my-post/` and in the `/blog/` index automatically.
 

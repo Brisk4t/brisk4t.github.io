@@ -36,9 +36,16 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		<ul class="grid">
 			{
 				posts.slice(0, 4).map((post) => (
-					<li>
-						<a href={`/blog/${post.id}/`}>{post.data.title}</a>
-						<p>{post.data.description}</p>
+					<li class="post-card">
+						<a href={`/blog/${post.id}/`}>
+							<div class="body">
+								<span class="title">{post.data.title}</span>
+								<p>{post.data.description}</p>
+							</div>
+							{post.data.heroImage && (
+								<img class="thumb" src={post.data.heroImage} alt={post.data.heroImageAlt ?? ''} loading="lazy" />
+							)}
+						</a>
 					</li>
 				))
 			}
@@ -59,5 +66,33 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
 		border-radius: 0.5rem;
 		padding: 1rem;
+	}
+	.grid li.post-card {
+		padding: 0;
+		overflow: hidden;
+	}
+	.post-card > a {
+		display: flex;
+		align-items: stretch;
+		gap: 1rem;
+		height: 100%;
+		color: inherit;
+		text-decoration: none;
+	}
+	.post-card .body {
+		flex: 1;
+		min-width: 0;
+		padding: 1rem 0 1rem 1.25rem;
+	}
+	.post-card .title {
+		font-weight: 600;
+	}
+	.post-card > a:hover .title {
+		text-decoration: underline;
+	}
+	.post-card .thumb {
+		width: 10rem;
+		flex-shrink: 0;
+		object-fit: cover;
 	}
 </style>

@@ -13,11 +13,18 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		{
 			posts.map((post) => (
 				<li>
-					<a href={`/blog/${post.id}/`}>{post.data.title}</a>
-					<time datetime={post.data.pubDate.toISOString()}>
-						{post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-					</time>
-					<p>{post.data.description}</p>
+					<a href={`/blog/${post.id}/`}>
+						<div class="body">
+							<span class="title">{post.data.title}</span>
+							<time datetime={post.data.pubDate.toISOString()}>
+								{post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+							</time>
+							<p>{post.data.description}</p>
+						</div>
+						{post.data.heroImage && (
+							<img class="thumb" src={post.data.heroImage} alt={post.data.heroImageAlt ?? ''} loading="lazy" />
+						)}
+					</a>
 				</li>
 			))
 		}
@@ -30,13 +37,36 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		padding: 0;
 	}
 	.posts li {
-		padding: 1rem 0;
-		border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+		margin-bottom: 1rem;
+		border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+		border-radius: 0.75rem;
+		overflow: hidden;
 	}
-	.posts a {
+	.posts li > a {
+		display: flex;
+		align-items: stretch;
+		gap: 1rem;
+		color: inherit;
+		text-decoration: none;
+	}
+	.body {
+		min-width: 0;
+		flex: 1;
+		padding: 1rem 0 1rem 1.25rem;
+	}
+	.thumb {
+		width: 17rem;
+		height: 12rem;
+		align-self: center;
+		flex-shrink: 0;
+		object-fit: cover;
+	}
+	.title {
 		font-size: 1.1rem;
 		font-weight: 600;
-		color: inherit;
+	}
+	.posts li > a:hover .title {
+		text-decoration: underline;
 	}
 	time {
 		display: block;
