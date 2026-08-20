@@ -51,7 +51,7 @@ const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
 	}
 	.cards li {
 		position: relative;
-		border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+		border: 1px solid var(--accent, #6366f1);
 		border-radius: 0.75rem;
 		background: var(--accent, #6366f1);
 		transition: box-shadow 0.2s ease;
@@ -86,12 +86,17 @@ const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
 	}
 	.cards .title {
 		position: absolute;
-		bottom: 100%;
-		font-size: 1.25rem;
+		bottom: calc(100% + 1px);
+		font-size: 0.85rem;
 		font-weight: 500;
 		color: #dbdada;
-		left: 0.15rem;
-		margin: 0 0 0.35rem;
+		left: 7px;
+		margin: 0;
+		padding: 0.25rem 0.75rem;
+		background: Canvas;
+		border: 1px solid var(--accent, #6366f1);
+		border-bottom: none;
+		border-radius: 0.5rem 0.5rem 0 0;
 	}
 	.cards li:hover .title {
 		text-decoration: none;
