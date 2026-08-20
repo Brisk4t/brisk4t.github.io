@@ -8,7 +8,12 @@ const path = Astro.url.pathname;
 ---
 
 <nav class="site-nav">
-	<a class="brand" href="/">brisk4t</a>
+	<div class="brand-group">
+				<a class="github" href="https://github.com/Brisk4t" aria-label="GitHub" target="_blank" rel="noopener noreferrer">
+			<span class="github-icon"></span>
+		</a>
+		<a class="brand" href="/">brisk4t</a>
+	</div>
 	<ul>
 		{
 			links.map((link) => (
@@ -30,11 +35,27 @@ const path = Astro.url.pathname;
 		padding: 1rem 1.5rem;
 		font-family: system-ui, sans-serif;
 	}
+	.brand-group {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
 	.brand {
 		font-weight: 700;
 		text-decoration: none;
 		color: inherit;
 		letter-spacing: -0.02em;
+	}
+	.github {
+		display: flex;
+	}
+	.github-icon {
+		display: block;
+		width: 30px;
+		height: 30px;
+		background-color: currentColor;
+		-webkit-mask: url('/icons/github.svg') no-repeat center / contain;
+		mask: url('/icons/github.svg') no-repeat center / contain;
 	}
 	ul {
 		display: flex;
