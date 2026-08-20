@@ -81,6 +81,11 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
 		border-radius: 0.5rem;
 		padding: 1rem;
+		transition: transform 0.15s ease, box-shadow 0.15s ease;
+	}
+	.grid li:hover {
+		transform: translate(-4px, -4px);
+		box-shadow: 4px 4px 0 0 #fff;
 	}
 	.grid li.post-card {
 		padding: 0;
