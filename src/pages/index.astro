@@ -12,7 +12,10 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 
 <BaseLayout title="Home">
 	<section>
-		<h1>Brisk4t</h1>
+		<div class="hero">
+			<img class="profile-pic" src="https://github.com/Brisk4t.png?size=200" alt="Brisk4t" loading="lazy" />
+			<h1>Brisk4t</h1>
+		</div>
 		<p>Portfolio, blog, and a scrapbook of UI experiments &mdash; each one built as its own self-contained page.</p>
 	</section>
 
@@ -55,6 +58,18 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 </BaseLayout>
 
 <style>
+	.hero {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+	.profile-pic {
+		display: block;
+		width: 4rem;
+		height: 4rem;
+		border-radius: 50%;
+		object-fit: cover;
+	}
 	.grid {
 		list-style: none;
 		padding: 0;
