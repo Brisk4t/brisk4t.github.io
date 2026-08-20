@@ -12,6 +12,8 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.2.4"
+    "@astrojs/markdown-remark": "^7.2.4",
+    "astro": "^7.2.4",
+    "remark-github-blockquote-alert": "^2.1.0"
   }
 }

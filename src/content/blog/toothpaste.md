@@ -37,7 +37,7 @@ tags: [meta]
   <strong>ToothPaste</strong> allows a user to transmit <strong>AES-256</strong> encrypted keyboard and mouse commands to any USB-compatible device wirelessly, without the need for specialized drivers or extensive set-up using WEB-BLE, a Cryptographic IC and an ESP32-S3.
 </p>
 
-![ToothPaste Website About Page Thumbnail](/web/public/ToothPaste_Cover_V2.png)
+![ToothPaste Website About Page Thumbnail](https://www.toothpasteapp.com/ToothPaste_Cover_V2.png)
 <br/>
 
 ## Table of Contents
@@ -62,13 +62,13 @@ The obvious answer then, is to use an interface system that is universally suppo
 
 The [USB Rubber Ducky by Hak5](https://hak5.org/products/usb-rubber-ducky?variant=39874478932081) used this exact idea to spark a security arms-race to exploit devices, but that doesn't have to be the only reason to use it (but you absolutely still can \**wink*\*).
 
-![Pasting Between Devices](/web/public/ToothPasteBare.png)
+![Pasting Between Devices](https://www.toothpasteapp.com/ToothPasteBare.png)
 
 ### ToothPaste on a Desktop Browser, controlling an iPad
-![ToothPasteDemo](/web/public/ToothPasteDemoGif.gif)
+![ToothPasteDemo](https://www.toothpasteapp.com/ToothPasteDemoGif.gif)
 
 ### ToothPaste on a Mobile Browser, controlling a remote Linux Machine
-![ToothPasteDemoMobile](/web/public/ToothPasteDemoMobile.gif)
+![ToothPasteDemoMobile](https://www.toothpasteapp.com/ToothPasteDemoMobile.gif)
 
 # Quick Start 📦
 
@@ -80,7 +80,7 @@ The [USB Rubber Ducky by Hak5](https://hak5.org/products/usb-rubber-ducky?varian
 
 #### Alternatively, download the latest .bin firmware file from the releases section and flash it using [esptool](https://github.com/espressif/esptool) / [espwebtool](https://esptool.spacehuhn.com/) or a similar flasher utility.
 
-![Update Prompt](/web/public/UpdatePrompt.png)
+![Update Prompt](https://www.toothpasteapp.com/UpdatePrompt.png)
 
 ```The 'button' is GPIO0 (often labeled BOOT on ESP32 dev boards)```
 
@@ -121,7 +121,7 @@ For most hobbyists, any development board will suffice. But considering that we'
 
 ### I present...
 
-![ToothPaste Completed](/web/public/ToothPasteIPad.png)
+![ToothPaste Completed](https://www.toothpasteapp.com/ToothPasteIPad.png)
 
 
 # The Hardware (Deus Ex PCBWay) 🔌
@@ -140,7 +140,7 @@ That's when [PCBWay](https://www.pcbway.com/) contacted me saying they wanted to
 
 ### And finally... 
 
-![ToothPaste V2.0](/hardware/ToothPaste_V2_Cover_Annotated_PCBWay.png)
+![ToothPaste V2.0](https://raw.githubusercontent.com/Brisk4t/ToothPaste/main/hardware/ToothPaste_V2_Cover_Annotated_PCBWay.png)
 
 ### **They were flawless! They were beautiful!**
 
@@ -155,7 +155,7 @@ The [Microchip ATECC608B](https://www.microchip.com/en-us/product/atecc608b) Cry
 Unfortunately dealing with programming the chip itself is an adventure I'll cover elsewhere once I make sure I won't be DMCAd for uttering the dark words of the NDA (which i never received btw, thanks Microchip).
 
 ### Look at this caveman \*scoffs\*
-![ToothPaste Build](/firmware/images/ToothPaste_BOM.jpg)
+![ToothPaste Build](https://raw.githubusercontent.com/Brisk4t/ToothPaste/main/images/ToothPaste_BOM.jpg)
 
 
 # Security 🔑
@@ -173,7 +173,7 @@ With the [ATECC608B CryptoAuth IC](https://www.microchip.com/en-us/product/atecc
 
 ### What this results in is a secure system of communication where the transmitter(s) and device must first complete a pairing flow before sending potentially sensitive data.
 
-![ToothPaste Pairing](/web/public/Pairing.png)
+![ToothPaste Pairing](https://www.toothpasteapp.com/Pairing.png)
 
 # More Security 🔒
 
@@ -188,7 +188,7 @@ With the [ATECC608B CryptoAuth IC](https://www.microchip.com/en-us/product/atecc
 ToothPaste allows encrypting this local data, along with saved Macros and Duckyscript scripts, using a Password + [Argon2](https://argon2-cffi.readthedocs.io/en/stable/argon2.html) derived encryption key.
 This is identical to how password managers with browser extensions do it.
 
-![ToothPasteArgon](/web/public/ToothPasteArgon.png)
+![ToothPasteArgon](https://www.toothpasteapp.com/ToothPasteArgon.png)
 
 # Then there was AI 🤖
 
@@ -200,7 +200,7 @@ The best option, if you have it is to SSH into the device, and let an LLM handle
 
 ### But if you can't
 
-![ToothPasteDesktop Preview](/web/public/ToothPaste_Desktop_Preview.png)
+![ToothPasteDesktop Preview](https://www.toothpasteapp.com/ToothPaste_Desktop_Preview.png)
 
 [ToothPasteDesktop](https://github.com/Brisk4t/ToothPasteDesktop) implements a Rust-based **TUI & MCP server** that lets an AI agent control a ToothPaste and get a response from the remote system over a Serial port. This bi-directional bus does have some drawbacks, some fixable in software, others more hardware-based.
 
@@ -222,14 +222,14 @@ But I have to say there is a certain joy to saying ```Jarvis, open chrome and pl
 
 While I work in the shadows on ToothPasteDesktop, if you want to mess around with a less polished version, the MCPerhaps branches on this github have an electron app that does the same thing but... clunkier.
   
-![To Be Continued](/web/public/tobecontinued.png)
+![To Be Continued](https://www.toothpasteapp.com/tobecontinued.png)
 
 # There's a lot more...
 
 ### As with any passion-project, sometimes I get sidetracked with cool features and forget to fix / test everything. 
 
 #### Creating replayable ducky scripts in the ToothPaste WebApp.
-![ToothPasteScripting](/web/public/ToothPasteScripting.png)
+![ToothPasteScripting](https://www.toothpasteapp.com/ToothPasteScripting.png)
 
 
 There are features on the WebApp that I'll slowly document here and ToothPaste web hasn't gotten much TLC since I became enamoured with ToothPasteDesktop's Rust. 
