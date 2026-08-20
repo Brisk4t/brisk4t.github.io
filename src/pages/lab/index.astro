@@ -15,13 +15,17 @@ const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
 		{
 			labs.map((lab) => (
 				<li style={`--accent: ${lab.data.accent}`}>
-					<a href={`/lab/${lab.data.slug}/`}>
+					<span class="title">{lab.data.title}</span>
+					<a
+						href={lab.data.url ?? `/lab/${lab.data.slug}/`}
+						target={lab.data.url ? '_blank' : undefined}
+						rel={lab.data.url ? 'noopener noreferrer' : undefined}
+					>
 						{lab.data.heroImage && (
 							<img class="thumb" src={lab.data.heroImage} alt={lab.data.heroImageAlt ?? ''} loading="lazy" />
 						)}
 						<div class="overlay" />
 						<div class="body">
-							<h2>{lab.data.title}</h2>
 							<p>{lab.data.description}</p>
 							<ul class="tags">
 								{lab.data.tags.map((tag) => (
@@ -40,23 +44,29 @@ const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
 	.cards {
 		list-style: none;
 		padding: 0;
+		margin-top: 4rem;
 		display: grid;
-		gap: 1rem;
+		gap: 1.75rem 1rem;
 		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 	}
 	.cards li {
+		position: relative;
 		border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
 		border-radius: 0.75rem;
-		overflow: hidden;
 		background: var(--accent, #6366f1);
+		transition: box-shadow 0.2s ease;
+	}
+	.cards li:hover {
+		box-shadow: 0 0 1.5rem 0.25rem color-mix(in srgb, var(--accent, #6366f1) 45%, transparent);
 	}
 	.cards a {
 		position: relative;
 		display: block;
 		min-height: 12rem;
-		padding: 1rem;
 		color: #fff;
 		text-decoration: none;
+		overflow: hidden;
+		border-radius: inherit;
 	}
 	.thumb {
 		position: absolute;
@@ -71,21 +81,30 @@ const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
 		background: rgba(0, 0, 0, 0.5);
 	}
 	.body {
-		position: relative;
+		position: absolute;
+		inset: 1rem;
 	}
-	.cards h2 {
-		margin: 0;
-		font-size: 1.1rem;
+	.cards .title {
+		position: absolute;
+		bottom: 100%;
+		font-size: 1.25rem;
+		font-weight: 500;
+		color: #dbdada;
+		left: 0.15rem;
+		margin: 0 0 0.35rem;
 	}
-	.cards a:hover h2 {
-		text-decoration: underline;
+	.cards li:hover .title {
+		text-decoration: none;
 	}
 	.tags {
+		position: absolute;
+		left: 0;
+		bottom: 0;
 		display: flex;
 		gap: 0.4rem;
 		list-style: none;
 		padding: 0;
-		margin: 0.75rem 0 0;
+		margin: 0;
 		font-size: 0.75rem;
 		opacity: 0.85;
 	}

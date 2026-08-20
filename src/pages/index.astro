@@ -17,7 +17,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 			<img class="profile-pic" src="https://github.com/Brisk4t.png?size=200" alt="Brisk4t" loading="lazy" />
 			<h1>Brisk4t</h1>
 		</div>
-		<p>Portfolio, blog, and a scrapbook of UI experiments &mdash; each one built as its own self-contained page.</p>
+		<h2>Portfolio, blog, and a scrapbook of UI experiments - each one built as its own self-contained page.</h2>
 	</section>
 
 	<section>
@@ -46,7 +46,8 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 			{
 				labs.slice(0, 4).map((lab) => (
 					<HeroTile
-						href={`/lab/${lab.data.slug}/`}
+						href={lab.data.url ?? `/lab/${lab.data.slug}/`}
+						external={Boolean(lab.data.url)}
 						title={lab.data.title}
 						description={lab.data.description}
 						longDescription={lab.data.longDescription}

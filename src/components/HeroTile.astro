@@ -8,9 +8,10 @@ interface Props {
 	heroImageAlt?: string;
 	accent?: string;
 	date?: Date;
+	external?: boolean;
 }
 
-const { href, title, description, longDescription, heroImage, heroImageAlt, accent, date } = Astro.props;
+const { href, title, description, longDescription, heroImage, heroImageAlt, accent, date, external } = Astro.props;
 ---
 
 <li class="tile" style={accent ? `--accent: ${accent}` : undefined}>
@@ -19,7 +20,7 @@ const { href, title, description, longDescription, heroImage, heroImageAlt, acce
 			{date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
 		</time>
 	)}
-	<a href={href}>
+	<a href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>
 		{heroImage && <img class="thumb" src={heroImage} alt={heroImageAlt ?? ''} loading="lazy" />}
 		<div class="overlay" />
 		<div class="body">
