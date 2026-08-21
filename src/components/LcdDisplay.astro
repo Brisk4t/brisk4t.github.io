@@ -251,13 +251,22 @@ const singleLine = !line2;
 		gap: 0.15rem;
 	}
 	.pin {
-		width: clamp(4px, 1vw, 7px);
-		height: clamp(9px, 1.6vw, 13px);
-		border-radius: 1px;
-		background: linear-gradient(180deg, #f5dd8a, #b8860b);
+		position: relative;
+		width: clamp(7px, 1.7vw, 12px);
+		height: clamp(7px, 1.7vw, 12px);
+		border-radius: 50%;
+		background: radial-gradient(circle at 35% 35%, #f9e79a, #d9ab37 55%, #96731d 100%);
 		box-shadow:
 			0 0 1px rgba(0, 0, 0, 0.5),
 			inset 0 0 1px rgba(255, 255, 255, 0.6);
+	}
+	.pin::after {
+		content: '';
+		position: absolute;
+		inset: 30%;
+		border-radius: 50%;
+		background: #0a4a2c;
+		box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.6);
 	}
 	.pin-label {
 		font-family: system-ui, sans-serif;
