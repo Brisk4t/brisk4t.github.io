@@ -9,22 +9,28 @@ interface Props {
 	accent?: string;
 	date?: Date;
 	external?: boolean;
+	titleAbove?: boolean;
 }
 
-const { href, title, description, longDescription, heroImage, heroImageAlt, accent, date, external } = Astro.props;
+const { href, title, description, longDescription, heroImage, heroImageAlt, accent, date, external, titleAbove } = Astro.props;
 ---
 
 <li class="tile" style={accent ? `--accent: ${accent}` : undefined}>
-	{date && (
-		<time class="date" datetime={date.toISOString()}>
-			{date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-		</time>
+	{(titleAbove || date) && (
+		<div class="header">
+			{titleAbove && <span class="title-above">{title}</span>}
+			{date && (
+				<time class="date" datetime={date.toISOString()}>
+					{date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+				</time>
+			)}
+		</div>
 	)}
 	<a href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>
 		{heroImage && <img class="thumb" src={heroImage} alt={heroImageAlt ?? ''} loading="lazy" />}
 		<div class="overlay" />
 		<div class="body">
-			<span class="title">{title}</span>
+			{!titleAbove && <span class="title">{title}</span>}
 			<div class="desc-stack">
 				<p class="description">{description}</p>
 				{longDescription && <p class="description-long">{longDescription}</p>}
@@ -45,13 +51,25 @@ const { href, title, description, longDescription, heroImage, heroImageAlt, acce
 		transform: translate(-4px, -4px);
 		box-shadow: 4px 4px 0 0 #fff;
 	}
-	.date {
+	.header {
 		position: absolute;
 		bottom: 100%;
+		left: 0.15rem;
 		right: 0.15rem;
 		margin-bottom: 0.35rem;
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+	.title-above {
+		font-weight: 600;
+	}
+	.date {
 		font-size: 0.75rem;
 		opacity: 0.7;
+		white-space: nowrap;
+		margin-left: auto;
 	}
 	.tile > a {
 		position: relative;

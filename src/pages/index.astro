@@ -17,7 +17,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		<div class="hero">
 			<LcdDisplay line1="Brisk4t" avatarSrc="https://avatars.githubusercontent.com/u/31730769?s=200&v=4" avatarAlt="Brisk4t" />
 		</div>
-		<h2>Portfolio, blog, and a scrapbook of UI experiments - each one built as its own self-contained page.</h2>
+		<h3>All my crimes.</h3>
 	</section>
 
 	<section>
@@ -42,7 +42,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 
 	<section>
 		<h2>Scrapbooking With Code</h2>
-		<ul class="grid">
+		<ul class="grid grid-titled">
 			{
 				labs.slice(0, 4).map((lab) => (
 					<HeroTile
@@ -53,6 +53,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 						longDescription={lab.data.longDescription}
 						heroImage={lab.data.heroImage}
 						heroImageAlt={lab.data.heroImageAlt}
+						titleAbove
 					/>
 				))
 			}
@@ -71,8 +72,12 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	.grid {
 		list-style: none;
 		padding: 0;
+		margin-top: 2rem;
 		display: grid;
 		gap: 1rem;
 		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	}
+	.grid-titled {
+		margin-top: 4rem;
 	}
 </style>

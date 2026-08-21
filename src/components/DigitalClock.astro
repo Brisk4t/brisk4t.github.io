@@ -1,19 +1,24 @@
 <div class="digital-clock" id="digital-clock" aria-label="Current time">
-	<span class="segments" aria-hidden="true">88:88:88</span>
-	<span class="time" id="digital-clock-time">--:--:--</span>
+	<span class="segments" aria-hidden="true">88:88</span>
+	<span class="time" id="digital-clock-time">--:--</span>
+	<span class="ampm" id="digital-clock-ampm">--</span>
 </div>
 
 <script>
 	const timeEl = document.getElementById('digital-clock-time');
+	const ampmEl = document.getElementById('digital-clock-ampm');
 	const wrapperEl = document.getElementById('digital-clock');
 	const mobileQuery = window.matchMedia('(max-width: 640px)');
 	const BASE_FONT_SIZE = 16;
 
 	function tick() {
-		if (!timeEl) return;
+		if (!timeEl || !ampmEl) return;
 		const now = new Date();
 		const pad = (n: number) => String(n).padStart(2, '0');
-		timeEl.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+		const hours24 = now.getHours();
+		const hours12 = hours24 % 12 || 12;
+		timeEl.textContent = `${pad(hours12)}:${pad(now.getMinutes())}`;
+		ampmEl.textContent = hours24 < 12 ? 'AM' : 'PM';
 	}
 
 	function fit() {
@@ -31,7 +36,7 @@
 
 	tick();
 	fit();
-	setInterval(tick, 1000);
+	setInterval(tick, 10000);
 	window.addEventListener('resize', fit);
 	mobileQuery.addEventListener('change', fit);
 </script>
@@ -39,7 +44,9 @@
 <style>
 	.digital-clock {
 		position: relative;
-		display: inline-block;
+		display: inline-flex;
+		align-items: flex-start;
+		gap: 0.25rem;
 		font-family: 'DSEG7 Classic', monospace;
 		font-size: 2.5rem;
 		line-height: 1;
@@ -61,6 +68,14 @@
 		color: #3ef07a;
 		text-shadow: 0 0 0.35em rgba(62, 240, 122, 0.75);
 	}
+	.ampm {
+		font-family: system-ui, sans-serif;
+		font-size: 0.7rem;
+		font-weight: 600;
+		letter-spacing: 0.05em;
+		color: #3ef07a;
+		text-shadow: 0 0 0.35em rgba(62, 240, 122, 0.75);
+	}
 	@media (max-width: 640px) {
 		.digital-clock {
 			display: block;
@@ -71,6 +86,9 @@
 		}
 		.segments {
 			inset: 0;
+		}
+		.ampm {
+			display: none;
 		}
 	}
 </style>
