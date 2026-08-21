@@ -1,0 +1,46 @@
+<div class="digital-clock" id="digital-clock" aria-label="Current time">
+	<span class="segments" aria-hidden="true">88:88:88</span>
+	<span class="time" id="digital-clock-time">--:--:--</span>
+</div>
+
+<script>
+	const el = document.getElementById('digital-clock-time');
+
+	function tick() {
+		if (!el) return;
+		const now = new Date();
+		const pad = (n: number) => String(n).padStart(2, '0');
+		el.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+	}
+
+	tick();
+	setInterval(tick, 1000);
+</script>
+
+<style>
+	.digital-clock {
+		position: relative;
+		display: inline-block;
+		font-family: 'DSEG7 Classic', monospace;
+		font-size: 2.5rem;
+		line-height: 1;
+		padding: 0.75rem 0.75rem;
+		border-radius: 0.5rem;
+		background: #0e1410;
+	}
+	.segments,
+	.time {
+		grid-area: 1 / 1;
+		letter-spacing: 0.05em;
+	}
+	.segments {
+		position: absolute;
+		inset: 0.75rem 0.75rem;
+		color: #1c2b20;
+	}
+	.time {
+		position: relative;
+		color: #3ef07a;
+		text-shadow: 0 0 0.35em rgba(62, 240, 122, 0.75);
+	}
+</style>

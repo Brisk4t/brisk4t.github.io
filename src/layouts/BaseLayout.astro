@@ -1,5 +1,6 @@
 ---
 import SiteNav from '../components/SiteNav.astro';
+import DigitalClock from '../components/DigitalClock.astro';
 
 interface Props {
 	title: string;
@@ -20,6 +21,9 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 	</head>
 	<body>
 		<SiteNav />
+		<div class="clock-fixed">
+			<DigitalClock />
+		</div>
 		<main>
 			<slot />
 		</main>
@@ -30,6 +34,22 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 </html>
 
 <style is:global>
+	@font-face {
+		font-family: 'DSEG7 Classic';
+		src:
+			url('/fonts/DSEG7-Classic/DSEG7Classic-Regular.woff2') format('woff2');
+		font-weight: 400;
+		font-style: normal;
+		font-display: swap;
+	}
+	@font-face {
+		font-family: 'DSEG7 Classic';
+		src:
+			url('/fonts/DSEG7-Classic/DSEG7Classic-Bold.woff2') format('woff2');
+		font-weight: 700;
+		font-style: normal;
+		font-display: swap;
+	}
 	:root {
 		color-scheme: light dark;
 	}
@@ -48,12 +68,24 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 	main {
 		max-width: 960px;
 		margin: 0 auto;
-		padding: 1rem 1.5rem 3rem;
+		padding: 1rem 1.5rem 1.5rem;
 	}
 	footer {
 		text-align: center;
-		padding: 2rem;
+		padding: 1.25rem;
 		opacity: 0.6;
 		font-size: 0.85rem;
+	}
+	footer p {
+		margin: 0;
+	}
+</style>
+
+<style>
+	.clock-fixed {
+		position: fixed;
+		top: 4.5rem;
+		right: 0.5rem;
+		z-index: -1;
 	}
 </style>
