@@ -3,9 +3,11 @@ interface Props {
 	line1: string;
 	line2?: string;
 	as?: 'h1' | 'div';
+	avatarSrc?: string;
+	avatarAlt?: string;
 }
 
-const { line1, line2 = '', as: Tag = 'h1' } = Astro.props;
+const { line1, line2 = '', as: Tag = 'h1', avatarSrc, avatarAlt = '' } = Astro.props;
 
 const COLS = 16;
 const PIN_LABELS = ['VSS', 'VDD', 'V0', 'RS', 'RW', 'E', 'D0', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'A', 'K'];
@@ -30,14 +32,19 @@ const singleLine = !line2;
 		<div class="lcd-bezel">
 			<div class="lcd-screen" class:list={{ 'single-line': singleLine }} aria-hidden="true">
 				<div class="lcd-glass"></div>
-				<div class="lcd-row">
-					{row1.map((ch) => <span class="cell">{ch === ' ' ? ' ' : ch}</span>)}
-				</div>
-				{line2 && (
-					<div class="lcd-row">
-						{row2.map((ch) => <span class="cell">{ch === ' ' ? ' ' : ch}</span>)}
+				<div class="screen-content">
+					{avatarSrc && <canvas class="avatar-canvas" data-src={avatarSrc} data-alt={avatarAlt}></canvas>}
+					<div class="text-rows">
+						<div class="lcd-row">
+							{row1.map((ch) => <span class="cell">{ch === ' ' ? ' ' : ch}</span>)}
+						</div>
+						{line2 && (
+							<div class="lcd-row">
+								{row2.map((ch) => <span class="cell">{ch === ' ' ? ' ' : ch}</span>)}
+							</div>
+						)}
 					</div>
-				)}
+				</div>
 			</div>
 		</div>
 		<div class="pin-header" aria-hidden="true">
@@ -50,6 +57,73 @@ const singleLine = !line2;
 		</div>
 	</div>
 </Tag>
+
+<script>
+	const DITHER_GRID = 100;
+	const CELL_PX = 1.6;
+	const LUMA_THRESHOLD = 0.35;
+	const EDGE_BAND = 0.15;
+	const DOT_COLOR = '87, 244, 232';
+
+	function ditherCanvas(canvas: HTMLCanvasElement) {
+		const src = canvas.dataset.src;
+		if (!src) return;
+
+		const img = new Image();
+		img.crossOrigin = 'anonymous';
+		img.onload = () => {
+			const sample = document.createElement('canvas');
+			sample.width = DITHER_GRID;
+			sample.height = DITHER_GRID;
+			const sctx = sample.getContext('2d');
+			if (!sctx) return;
+			sctx.drawImage(img, 0, 0, DITHER_GRID, DITHER_GRID);
+			const { data } = sctx.getImageData(0, 0, DITHER_GRID, DITHER_GRID);
+
+			const lumas = new Float32Array(DITHER_GRID * DITHER_GRID);
+			let minLuma = 1;
+			let maxLuma = 0;
+			for (let p = 0; p < lumas.length; p++) {
+				const i = p * 4;
+				const luma = (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) / 255;
+				lumas[p] = luma;
+				if (luma < minLuma) minLuma = luma;
+				if (luma > maxLuma) maxLuma = luma;
+			}
+			const range = maxLuma - minLuma || 1;
+
+			canvas.width = DITHER_GRID * CELL_PX;
+			canvas.height = DITHER_GRID * CELL_PX;
+			const ctx = canvas.getContext('2d');
+			if (!ctx) return;
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			for (let y = 0; y < DITHER_GRID; y++) {
+				for (let x = 0; x < DITHER_GRID; x++) {
+					const p = y * DITHER_GRID + x;
+					const a = data[p * 4 + 3];
+					const normLuma = (lumas[p] - minLuma) / range;
+					if (a <= 32) continue;
+					const opacity = Math.min(1, Math.max(0, (normLuma - LUMA_THRESHOLD) / EDGE_BAND + 0.5));
+					if (opacity <= 0) continue;
+
+					const radius = CELL_PX * 0.42;
+					const cx = x * CELL_PX + CELL_PX / 2;
+					const cy = y * CELL_PX + CELL_PX / 2;
+					ctx.beginPath();
+					ctx.fillStyle = `rgba(${DOT_COLOR}, ${opacity * 0.95})`;
+					ctx.shadowColor = `rgba(${DOT_COLOR}, ${opacity * 0.9})`;
+					ctx.shadowBlur = radius * 1.4;
+					ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+					ctx.fill();
+				}
+			}
+		};
+		img.src = src;
+	}
+
+	document.querySelectorAll<HTMLCanvasElement>('.avatar-canvas[data-src]').forEach(ditherCanvas);
+</script>
 
 <style>
 	.lcd {
@@ -104,9 +178,7 @@ const singleLine = !line2;
 	}
 	.lcd-screen {
 		position: relative;
-		display: inline-grid;
-		grid-auto-rows: clamp(1.4rem, 4.2vw, 2.6rem);
-		gap: 0;
+		display: inline-block;
 		padding: 0.15rem 0.5rem;
 		border-radius: 0.25rem;
 		background: radial-gradient(120% 140% at 30% 0%, #14181b 0%, #08090a 65%, #030304 100%);
@@ -115,15 +187,32 @@ const singleLine = !line2;
 			inset 0 -1px 0 rgba(255, 255, 255, 0.04);
 		overflow: hidden;
 	}
-	.lcd-screen.single-line {
-		grid-auto-rows: clamp(2.8rem, 8.4vw, 5.2rem);
-	}
 	.lcd-glass {
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
 		background: linear-gradient(115deg, rgba(160, 210, 220, 0.1) 0%, rgba(160, 210, 220, 0.02) 25%, transparent 45%);
 		mix-blend-mode: screen;
+	}
+	.screen-content {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.avatar-canvas {
+		display: block;
+		aspect-ratio: 1;
+		height: 100%;
+		flex-shrink: 0;
+		image-rendering: pixelated;
+	}
+	.text-rows {
+		display: inline-grid;
+		grid-auto-rows: clamp(1.4rem, 4.2vw, 2.6rem);
+	}
+	.single-line .text-rows {
+		grid-auto-rows: clamp(2.8rem, 8.4vw, 5.2rem);
 	}
 	.lcd-row {
 		position: relative;
