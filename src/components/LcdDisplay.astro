@@ -1,0 +1,160 @@
+---
+interface Props {
+	line1: string;
+	line2?: string;
+	as?: 'h1' | 'div';
+}
+
+const { line1, line2 = '', as: Tag = 'h1' } = Astro.props;
+
+const COLS = 16;
+const PIN_LABELS = ['VSS', 'VDD', 'V0', 'RS', 'RW', 'E', 'D0', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'A', 'K'];
+
+function toCells(text: string) {
+	const chars = text.slice(0, COLS).split('');
+	while (chars.length < COLS) chars.push(' ');
+	return chars;
+}
+
+const row1 = toCells(line1);
+const row2 = toCells(line2);
+---
+
+<Tag class="lcd" aria-label={line2 ? `${line1} ${line2}` : line1}>
+	<div class="pcb">
+		<span class="hole hole-tl"></span>
+		<span class="hole hole-tr"></span>
+		<span class="hole hole-bl"></span>
+		<span class="hole hole-br"></span>
+		<div class="lcd-bezel">
+			<div class="lcd-screen" aria-hidden="true">
+				<div class="lcd-row">
+					{row1.map((ch) => <span class="cell">{ch === ' ' ? ' ' : ch}</span>)}
+				</div>
+				<div class="lcd-row">
+					{row2.map((ch) => <span class="cell">{ch === ' ' ? ' ' : ch}</span>)}
+				</div>
+			</div>
+		</div>
+		<div class="pin-header" aria-hidden="true">
+			{PIN_LABELS.map((label) => (
+				<div class="pin-slot">
+					<span class="pin"></span>
+					<span class="pin-label">{label}</span>
+				</div>
+			))}
+		</div>
+	</div>
+</Tag>
+
+<style>
+	.lcd {
+		display: inline-block;
+		margin: 0;
+		font-weight: normal;
+	}
+	.pcb {
+		position: relative;
+		display: inline-block;
+		padding: 0.7rem 0.7rem 0.4rem;
+		border-radius: 0.35rem;
+		background:
+			radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.06), transparent 40%),
+			linear-gradient(160deg, #0f6b3f, #0a4a2c);
+		box-shadow:
+			0 6px 16px rgba(0, 0, 0, 0.35),
+			inset 0 1px 0 rgba(255, 255, 255, 0.08);
+	}
+	.hole {
+		position: absolute;
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background: radial-gradient(circle at 35% 35%, #dcdcdc, #8a8a8a 65%, #5a5a5a);
+		box-shadow: inset 0 0 0 2px #0a4a2c;
+	}
+	.hole-tl {
+		top: 0.35rem;
+		left: 0.35rem;
+	}
+	.hole-tr {
+		top: 0.35rem;
+		right: 0.35rem;
+	}
+	.hole-bl {
+		bottom: 1.6rem;
+		left: 0.35rem;
+	}
+	.hole-br {
+		bottom: 1.6rem;
+		right: 0.35rem;
+	}
+	.lcd-bezel {
+		display: inline-block;
+		padding: 0.7rem;
+		border-radius: 0.4rem;
+		background: linear-gradient(160deg, #4a4a4a, #1c1c1c);
+		box-shadow:
+			0 3px 8px rgba(0, 0, 0, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	}
+	.lcd-screen {
+		display: inline-grid;
+		grid-template-rows: repeat(2, 1fr);
+		gap: 0.2rem;
+		padding: 0.4rem 0.5rem;
+		border-radius: 0.25rem;
+		background-image:
+			radial-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+			linear-gradient(175deg, #a9c17c 0%, #8fae5c 55%, #7c9f4c 100%);
+		background-size:
+			4px 4px,
+			auto;
+		box-shadow:
+			inset 0 2px 6px rgba(0, 0, 0, 0.35),
+			inset 0 -1px 0 rgba(255, 255, 255, 0.15);
+	}
+	.lcd-row {
+		display: grid;
+		grid-template-columns: repeat(16, 1fr);
+	}
+	.cell {
+		font-family: 'Bitcount Single', monospace;
+		font-weight: 560;
+		font-size: clamp(0.75rem, 2.4vw, 1.4rem);
+		line-height: 1.3;
+		text-align: center;
+		color: #1c2b12;
+	}
+	.pin-header {
+		display: flex;
+		justify-content: center;
+		gap: clamp(1px, 0.3vw, 3px);
+		margin-top: 0.5rem;
+		padding: 0 0.2rem;
+	}
+	.pin-slot {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.15rem;
+	}
+	.pin {
+		width: clamp(4px, 1vw, 7px);
+		height: clamp(9px, 1.6vw, 13px);
+		border-radius: 1px;
+		background: linear-gradient(180deg, #f5dd8a, #b8860b);
+		box-shadow:
+			0 0 1px rgba(0, 0, 0, 0.5),
+			inset 0 0 1px rgba(255, 255, 255, 0.6);
+	}
+	.pin-label {
+		font-family: system-ui, sans-serif;
+		font-size: 0.4rem;
+		letter-spacing: -0.02em;
+		color: #cfe8d4;
+		opacity: 0.55;
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+	}
+</style>

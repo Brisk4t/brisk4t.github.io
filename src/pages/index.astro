@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroTile from '../components/HeroTile.astro';
+import LcdDisplay from '../components/LcdDisplay.astro';
 import { getCollection } from 'astro:content';
 
 const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
@@ -15,7 +16,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	<section>
 		<div class="hero">
 			<img class="profile-pic" src="https://github.com/Brisk4t.png?size=200" alt="Brisk4t" loading="lazy" />
-			<h1>Brisk4t</h1>
+			<LcdDisplay line1="Brisk4t" />
 		</div>
 		<h2>Portfolio, blog, and a scrapbook of UI experiments - each one built as its own self-contained page.</h2>
 	</section>
