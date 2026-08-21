@@ -48,18 +48,18 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		overflow: hidden;
 	}
 	.posts li > a {
-		position: relative;
 		display: flex;
 		align-items: stretch;
 		gap: 1rem;
-		min-height: 12rem;
 		color: inherit;
 		text-decoration: none;
 	}
 	.body {
 		min-width: 0;
 		flex: 1;
-		padding: 1rem 0 1rem 1.25rem;
+		display: flex;
+		flex-direction: column;
+		padding: 1rem 1.25rem;
 	}
 	.thumb {
 		width: 17rem;
@@ -82,14 +82,12 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		margin: 0.15rem 0 0.4rem;
 	}
 	.tags {
-		position: absolute;
-		left: 1.25rem;
-		bottom: 1rem;
 		display: flex;
+		flex-wrap: wrap;
 		gap: 0.4rem;
 		list-style: none;
 		padding: 0;
-		margin: 0;
+		margin: 0.75rem 0 0;
 		font-size: 0.75rem;
 		opacity: 0.7;
 	}
@@ -97,5 +95,15 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		border: 1px solid currentColor;
 		border-radius: 999px;
 		padding: 0.1rem 0.5rem;
+	}
+	@media (max-width: 640px) {
+		.posts li > a {
+			flex-direction: column;
+		}
+		.thumb {
+			width: 100%;
+			height: 10rem;
+			align-self: stretch;
+		}
 	}
 </style>
