@@ -4,17 +4,36 @@
 </div>
 
 <script>
-	const el = document.getElementById('digital-clock-time');
+	const timeEl = document.getElementById('digital-clock-time');
+	const wrapperEl = document.getElementById('digital-clock');
+	const mobileQuery = window.matchMedia('(max-width: 640px)');
+	const BASE_FONT_SIZE = 16;
 
 	function tick() {
-		if (!el) return;
+		if (!timeEl) return;
 		const now = new Date();
 		const pad = (n: number) => String(n).padStart(2, '0');
-		el.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+		timeEl.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+	}
+
+	function fit() {
+		if (!wrapperEl || !timeEl) return;
+		if (!mobileQuery.matches) {
+			wrapperEl.style.fontSize = '';
+			return;
+		}
+		wrapperEl.style.fontSize = `${BASE_FONT_SIZE}px`;
+		const naturalWidth = timeEl.getBoundingClientRect().width;
+		const available = wrapperEl.clientWidth;
+		const scale = naturalWidth > 0 ? available / naturalWidth : 1;
+		wrapperEl.style.fontSize = `${BASE_FONT_SIZE * scale}px`;
 	}
 
 	tick();
+	fit();
 	setInterval(tick, 1000);
+	window.addEventListener('resize', fit);
+	mobileQuery.addEventListener('change', fit);
 </script>
 
 <style>
@@ -30,7 +49,6 @@
 	}
 	.segments,
 	.time {
-		grid-area: 1 / 1;
 		letter-spacing: 0.05em;
 	}
 	.segments {
@@ -42,5 +60,17 @@
 		position: relative;
 		color: #3ef07a;
 		text-shadow: 0 0 0.35em rgba(62, 240, 122, 0.75);
+	}
+	@media (max-width: 640px) {
+		.digital-clock {
+			display: block;
+			width: 100%;
+			padding: 0;
+			border-radius: 0;
+			opacity: 0.25;
+		}
+		.segments {
+			inset: 0;
+		}
 	}
 </style>
