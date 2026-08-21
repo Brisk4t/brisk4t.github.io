@@ -24,6 +24,7 @@ const singleLine = !line2;
 ---
 
 <Tag class="lcd" aria-label={line2 ? `${line1} ${line2}` : line1}>
+	<div class="pcb-scale">
 	<div class="pcb">
 		<span class="hole hole-tl"></span>
 		<span class="hole hole-tr"></span>
@@ -55,6 +56,7 @@ const singleLine = !line2;
 				</div>
 			))}
 		</div>
+	</div>
 	</div>
 </Tag>
 
@@ -123,13 +125,53 @@ const singleLine = !line2;
 	}
 
 	document.querySelectorAll<HTMLCanvasElement>('.avatar-canvas[data-src]').forEach(ditherCanvas);
+
+	function setupFit(wrapper: HTMLElement) {
+		const pcb = wrapper.querySelector<HTMLElement>('.pcb');
+		const container = wrapper.parentElement;
+		if (!pcb || !container) return;
+
+		function fit() {
+			wrapper.style.width = '';
+			wrapper.style.height = '';
+			pcb.style.transform = 'none';
+
+			const naturalWidth = pcb.getBoundingClientRect().width;
+			const naturalHeight = pcb.getBoundingClientRect().height;
+			const available = container.clientWidth;
+			const scale = Math.min(1, available / naturalWidth);
+
+			if (scale < 1) {
+				pcb.style.transformOrigin = 'top left';
+				pcb.style.transform = `scale(${scale})`;
+				wrapper.style.width = `${naturalWidth * scale}px`;
+				wrapper.style.height = `${naturalHeight * scale}px`;
+			}
+		}
+
+		// Re-fit whenever the PCB's natural size or the container's available
+		// width changes for any reason (web font swap, viewport resize, mobile
+		// browser toolbar collapse/expand) rather than guessing specific events.
+		const ro = new ResizeObserver(fit);
+		ro.observe(container);
+		ro.observe(pcb);
+		fit();
+	}
+
+	document.querySelectorAll<HTMLElement>('.pcb-scale').forEach(setupFit);
 </script>
 
 <style>
 	.lcd {
-		display: inline-block;
+		display: block;
+		width: 100%;
 		margin: 0;
 		font-weight: normal;
+		text-align: center;
+	}
+	.pcb-scale {
+		display: inline-block;
+		max-width: 100%;
 	}
 	.pcb {
 		position: relative;
