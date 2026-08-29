@@ -1,0 +1,1093 @@
+---
+// Detached lab page: owns its whole <html>, fonts, palette and layout. Only the
+// hub back-link (MinimalShell) is opted into. Everything else here is a
+// self-contained demo of the WebMCP guided-tour layer in src/lib/webmcp/.
+import MinimalShell from '../../../layouts/MinimalShell.astro';
+
+const nav = [
+	{ id: 'overview', label: 'Overview' },
+	{ id: 'install-cli', label: '1 · Install the CLI' },
+	{ id: 'flash-firmware', label: '2 · Flash the firmware' },
+	{ id: 'configure', label: '3 · Configure the gateway' },
+	{ id: 'pair-sensor', label: '4 · Pair a sensor' },
+	{ id: 'troubleshooting', label: 'Troubleshooting' },
+];
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Guided Tour (WebMCP) · brisk4t lab</title>
+		<meta
+			name="description"
+			content="A detached lab: a WebMCP layer that lets an agent highlight and explain any element on the page."
+		/>
+	</head>
+	<body>
+		<MinimalShell />
+
+		<div class="shell">
+			<aside class="sidebar">
+				<div class="product">
+					<span class="logo" aria-hidden="true"></span>
+					<div>
+						<strong>Meadowlark</strong>
+						<span>Gateway&nbsp;docs</span>
+					</div>
+				</div>
+				<nav aria-label="Setup steps">
+					{
+						nav.map((item, i) => (
+							<button
+								type="button"
+								class="nav-link"
+								data-view-link={item.id}
+								data-tour-id={`nav-${item.id}`}
+								aria-current={i === 0 ? 'page' : undefined}
+							>
+								{item.label}
+							</button>
+						))
+					}
+				</nav>
+				<p class="side-note">
+					A fictional product. The point is the <em>tour</em>, not the gateway.
+				</p>
+			</aside>
+
+			<main class="content">
+				<!-- ─────────────────────────── Overview ─────────────────────────── -->
+				<section class="view is-active" data-view="overview">
+					<h1>Set up your Meadowlark Gateway</h1>
+					<p class="lede">
+						Four steps: install the CLI, flash the gateway, point it at your network, and pair a
+						sensor. Roughly ten minutes.
+					</p>
+
+					<div class="callout-box" data-tour-id="tour-invite">
+						<h2>New here? Take the guided tour</h2>
+						<p>
+							Instead of reading top to bottom, let the assistant walk you through the interface —
+							it highlights each control and explains what it's for. Open the <strong
+								>WebMCP console</strong
+							> (bottom-right) and hit <em>Play guided tour</em>.
+						</p>
+					</div>
+
+					<h2>What you'll need</h2>
+					<ul class="needs">
+						<li data-tour-id="need-hardware">A Meadowlark Gateway (rev C or later) and a USB-C cable</li>
+						<li data-tour-id="need-node">Node.js 20+ on your workstation</li>
+						<li data-tour-id="need-wifi">2.4&nbsp;GHz Wi-Fi credentials for the gateway's home network</li>
+						<li data-tour-id="need-sensor">At least one Meadowlark sensor to pair</li>
+					</ul>
+
+					<div class="btn-row">
+						<button type="button" class="btn primary" data-tour-id="start-here" data-view-link="install-cli">
+							Start with step 1
+						</button>
+						<button type="button" class="btn" data-tour-id="open-console-hint" data-open-console>
+							Open the WebMCP console
+						</button>
+					</div>
+				</section>
+
+				<!-- ────────────────────────── Install CLI ───────────────────────── -->
+				<section class="view" data-view="install-cli" aria-hidden="true">
+					<h1>1 · Install the Meadowlark CLI</h1>
+					<p class="lede">
+						The <code>meadow</code> CLI flashes firmware, pushes config, and streams logs from the
+						gateway over USB.
+					</p>
+
+					<h2>Install</h2>
+					<div class="tabs" data-tour-id="install-tabs">
+						<button type="button" class="tab is-active" data-pkg="npm">npm</button>
+						<button type="button" class="tab" data-pkg="brew">Homebrew</button>
+						<button type="button" class="tab" data-pkg="curl">curl</button>
+					</div>
+					<pre data-tour-id="install-cmd"><code data-pkg-cmd="npm">npm install -g @meadowlark/cli</code><code
+							data-pkg-cmd="brew"
+							hidden>brew install meadowlark/tap/meadow</code><code data-pkg-cmd="curl" hidden
+							>curl -fsSL https://get.meadowlark.dev | sh</code
+						></pre>
+					<div class="btn-row">
+						<button type="button" class="btn" data-tour-id="copy-install">Copy command</button>
+						<button type="button" class="btn" data-tour-id="verify-install">Verify installation</button>
+					</div>
+					<p class="result" data-tour-id="install-result" hidden></p>
+
+					<h2>What "verify" checks</h2>
+					<p>
+						It runs <code>meadow --version</code> and pings the release channel so you know the CLI
+						can reach Meadowlark's servers before you depend on it mid-flash.
+					</p>
+				</section>
+
+				<!-- ───────────────────────── Flash firmware ─────────────────────── -->
+				<section class="view" data-view="flash-firmware" aria-hidden="true">
+					<h1>2 · Flash the gateway firmware</h1>
+					<p class="lede">
+						A new gateway ships with a minimal bootloader. Flashing installs the real firmware and
+						its radio stack.
+					</p>
+
+					<h2>Put the gateway in bootloader mode</h2>
+					<ol class="steps">
+						<li data-tour-id="flash-step-cable">Connect the gateway to your workstation with USB-C.</li>
+						<li data-tour-id="flash-step-buttons">
+							Hold <kbd>BOOT</kbd>, tap <kbd>RESET</kbd>, then release <kbd>BOOT</kbd>. The status
+							LED turns steady amber.
+						</li>
+						<li data-tour-id="flash-step-detect">Click <em>Detect device</em> — it should appear as <code>tty.meadow0</code>.</li>
+					</ol>
+
+					<div class="device-panel" data-tour-id="device-panel">
+						<span class="dot" data-device-dot></span>
+						<span data-device-label>No device detected</span>
+					</div>
+
+					<div class="btn-row">
+						<button type="button" class="btn" data-tour-id="detect-device">Detect device</button>
+						<button type="button" class="btn primary" data-tour-id="flash-latest" disabled>
+							Flash latest (v3.2.1)
+						</button>
+					</div>
+					<p class="result" data-tour-id="flash-result" hidden></p>
+				</section>
+
+				<!-- ────────────────────────── Configure ─────────────────────────── -->
+				<section class="view" data-view="configure" aria-hidden="true">
+					<h1>3 · Configure the gateway</h1>
+					<p class="lede">
+						The gateway needs your Wi-Fi, a region (for radio duty-cycle limits), and an MQTT
+						endpoint to publish sensor data to.
+					</p>
+
+					<form class="config-form" data-tour-id="config-form" onsubmit="return false">
+						<label>
+							<span>Wi-Fi SSID</span>
+							<input type="text" data-tour-id="wifi-ssid" placeholder="meadow-home" />
+						</label>
+						<label>
+							<span>Wi-Fi password</span>
+							<input type="password" data-tour-id="wifi-pass" placeholder="••••••••" />
+						</label>
+						<label>
+							<span>Region</span>
+							<select data-tour-id="region-select">
+								<option>EU868</option>
+								<option>US915</option>
+								<option>AU915</option>
+								<option>AS923</option>
+							</select>
+						</label>
+						<label>
+							<span>MQTT endpoint</span>
+							<input type="text" data-tour-id="mqtt-endpoint" placeholder="mqtts://broker.example.com:8883" />
+						</label>
+					</form>
+
+					<div class="btn-row">
+						<button type="button" class="btn" data-tour-id="test-connection">Test connection</button>
+						<button type="button" class="btn primary" data-tour-id="save-config">Save configuration</button>
+					</div>
+					<p class="result" data-tour-id="config-result" hidden></p>
+				</section>
+
+				<!-- ───────────────────────── Pair a sensor ─────────────────────── -->
+				<section class="view" data-view="pair-sensor" aria-hidden="true">
+					<h1>4 · Pair a sensor</h1>
+					<p class="lede">
+						Pairing exchanges keys between the gateway and a sensor so its readings are accepted and
+						decrypted.
+					</p>
+
+					<ol class="steps">
+						<li data-tour-id="pair-step-mode">Click <em>Enter pairing mode</em>. The gateway listens for 60 seconds.</li>
+						<li data-tour-id="pair-step-button">
+							On the sensor, hold the pairing button for 5 seconds until its LED blinks twice.
+						</li>
+						<li data-tour-id="pair-step-scan">Click <em>Scan for sensors</em> and confirm the device ID that appears.</li>
+					</ol>
+
+					<div class="pairing" data-tour-id="pairing-status">
+						<span data-pair-label>Idle</span>
+					</div>
+
+					<div class="btn-row">
+						<button type="button" class="btn primary" data-tour-id="enter-pairing">Enter pairing mode</button>
+						<button type="button" class="btn" data-tour-id="scan-sensors">Scan for sensors</button>
+					</div>
+					<ul class="sensor-list" data-tour-id="sensor-list" hidden></ul>
+				</section>
+
+				<!-- ──────────────────────── Troubleshooting ────────────────────── -->
+				<section class="view" data-view="troubleshooting" aria-hidden="true">
+					<h1>Troubleshooting</h1>
+					<dl class="faq">
+						<dt data-tour-id="tb-nodevice">"No device detected" after entering bootloader mode</dt>
+						<dd>
+							Try a different USB-C cable — many are power-only. On Linux, add yourself to the
+							<code>dialout</code> group and re-log.
+						</dd>
+						<dt data-tour-id="tb-wifi">Gateway won't join Wi-Fi</dt>
+						<dd>
+							The radio is 2.4&nbsp;GHz only. Check the SSID isn't 5&nbsp;GHz-exclusive and that the
+							password has no leading/trailing spaces.
+						</dd>
+						<dt data-tour-id="tb-mqtt">"Test connection" fails on MQTT</dt>
+						<dd>
+							Use the <code>mqtts://</code> scheme and port 8883 for TLS. A plain <code>mqtt://</code>
+							endpoint is rejected unless you pass <code>--insecure</code> when saving.
+						</dd>
+						<dt data-tour-id="tb-pairing">Sensor never shows up in a scan</dt>
+						<dd>
+							The region on the sensor and the gateway must match. A US915 sensor is invisible to an
+							EU868 gateway.
+						</dd>
+					</dl>
+				</section>
+			</main>
+		</div>
+
+		<!-- ───────────────────────── WebMCP console ────────────────────────── -->
+		<aside class="console is-collapsed" data-tour-id="mcp-console" aria-label="WebMCP console">
+			<button type="button" class="console-bar" data-console-toggle>
+				<span class="pill">WebMCP</span>
+				<span class="console-title">tools this page exposes</span>
+				<span class="count" data-tool-count>0</span>
+				<span class="chevron" aria-hidden="true"></span>
+			</button>
+			<div class="console-body">
+				<p class="console-intro">
+					An agent wired to <code>navigator.modelContext</code> can call these. No agent connected
+					here, so this panel calls them for you.
+				</p>
+				<ul class="tool-list" data-tool-list></ul>
+
+				<div class="console-actions">
+					<button type="button" class="btn primary" data-play-tour>▶ Play guided tour</button>
+					<button type="button" class="btn" data-stop-tour hidden>Stop</button>
+				</div>
+
+				<details class="manual">
+					<summary>Call a tool by hand</summary>
+					<label>
+						<span>Target (selector, or plain text)</span>
+						<input type="text" data-manual-ref placeholder="#save-config  ·  or:  Test connection" />
+					</label>
+					<label>
+						<span>Explanation (for highlight_with_context)</span>
+						<input type="text" data-manual-explain placeholder="What this control does…" />
+					</label>
+					<div class="btn-row">
+						<button type="button" class="btn" data-manual-highlight>highlight</button>
+						<button type="button" class="btn" data-manual-context>highlight_with_context</button>
+					</div>
+				</details>
+
+				<pre class="log" data-console-log aria-live="polite"></pre>
+			</div>
+		</aside>
+
+		<script>
+			import { installGuidedTourLayer } from '../../../lib/webmcp/guided-tour-layer';
+
+			const layer = installGuidedTourLayer({ accent: '#7c3aed' });
+			const mcp = layer.modelContext;
+
+			/* ---------------- sidebar / view switching ---------------- */
+
+			const views = Array.from(document.querySelectorAll<HTMLElement>('[data-view]'));
+			const links = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-view-link]'));
+
+			function activateView(id: string) {
+				if (!id) return;
+				for (const v of views) {
+					const on = v.dataset.view === id;
+					v.classList.toggle('is-active', on);
+					v.setAttribute('aria-hidden', on ? 'false' : 'true');
+				}
+				for (const l of links) {
+					const on = l.dataset.viewLink === id && l.classList.contains('nav-link');
+					if (l.classList.contains('nav-link'))
+						l.setAttribute('aria-current', on ? 'page' : 'false');
+				}
+				document.querySelector<HTMLElement>('.content')?.scrollTo({ top: 0 });
+			}
+
+			for (const l of links) {
+				l.addEventListener('click', () => activateView(l.dataset.viewLink!));
+			}
+
+			/* The generic reveal handshake: when the layer (or a real agent) points
+			   at something on an inactive view, bring that view forward. */
+			document.addEventListener('webmcp:reveal', (e) => {
+				const detail = (e as CustomEvent).detail as { element: Element | null };
+				const section = detail.element?.closest<HTMLElement>('[data-view]');
+				if (section?.dataset.view) activateView(section.dataset.view);
+			});
+
+			/* ---------------- toy interactions on the "product" ---------------- */
+
+			const $ = <T extends Element>(s: string) => document.querySelector<T>(s);
+			const showResult = (sel: string, text: string) => {
+				const el = $(sel) as HTMLElement | null;
+				if (!el) return;
+				el.hidden = false;
+				el.textContent = text;
+			};
+
+			// install tabs
+			document.querySelectorAll<HTMLButtonElement>('.tabs .tab').forEach((tab) => {
+				tab.addEventListener('click', () => {
+					document.querySelectorAll('.tabs .tab').forEach((t) => t.classList.remove('is-active'));
+					tab.classList.add('is-active');
+					const pkg = tab.dataset.pkg;
+					document
+						.querySelectorAll<HTMLElement>('[data-pkg-cmd]')
+						.forEach((c) => (c.hidden = c.dataset.pkgCmd !== pkg));
+				});
+			});
+			$('[data-tour-id="copy-install"]')?.addEventListener('click', () => {
+				const cmd = document.querySelector<HTMLElement>('[data-pkg-cmd]:not([hidden])')?.textContent ?? '';
+				navigator.clipboard?.writeText(cmd).catch(() => {});
+				showResult('[data-tour-id="install-result"]', `Copied:  ${cmd}`);
+			});
+			$('[data-tour-id="verify-install"]')?.addEventListener('click', () => {
+				showResult('[data-tour-id="install-result"]', 'meadow 3.4.0 · release channel reachable ✓');
+			});
+
+			// flash
+			$('[data-tour-id="detect-device"]')?.addEventListener('click', () => {
+				const dot = $('[data-device-dot]') as HTMLElement;
+				const label = $('[data-device-label]') as HTMLElement;
+				dot?.classList.add('ok');
+				if (label) label.textContent = 'Meadowlark Gateway rev C · tty.meadow0';
+				($('[data-tour-id="flash-latest"]') as HTMLButtonElement).disabled = false;
+			});
+			$('[data-tour-id="flash-latest"]')?.addEventListener('click', () => {
+				showResult('[data-tour-id="flash-result"]', 'Flashing v3.2.1… wrote 4.2 MB · verified · gateway rebooted ✓');
+			});
+
+			// configure
+			$('[data-tour-id="test-connection"]')?.addEventListener('click', () => {
+				const ep = ($('[data-tour-id="mqtt-endpoint"]') as HTMLInputElement)?.value || '(empty)';
+				const ok = ep.startsWith('mqtts://');
+				showResult(
+					'[data-tour-id="config-result"]',
+					ok ? `TLS handshake with ${ep} ✓` : `Refusing ${ep} — use mqtts:// on port 8883.`,
+				);
+			});
+			$('[data-tour-id="save-config"]')?.addEventListener('click', () => {
+				showResult('[data-tour-id="config-result"]', 'Configuration pushed to gateway · it will reconnect in ~15s.');
+			});
+
+			// pairing
+			$('[data-tour-id="enter-pairing"]')?.addEventListener('click', () => {
+				const l = $('[data-pair-label]') as HTMLElement;
+				if (l) l.textContent = 'Listening… 60s';
+			});
+			$('[data-tour-id="scan-sensors"]')?.addEventListener('click', () => {
+				const list = $('[data-tour-id="sensor-list"]') as HTMLElement;
+				list.hidden = false;
+				list.innerHTML = '<li>ML-SOIL-7F3A · signal −61 dBm · <strong>confirm</strong></li>';
+				const l = $('[data-pair-label]') as HTMLElement;
+				if (l) l.textContent = '1 sensor found';
+			});
+
+			/* ---------------- WebMCP console wiring ---------------- */
+
+			const consoleEl = $('.console') as HTMLElement;
+			const logEl = $('[data-console-log]') as HTMLElement;
+			const toolList = $('[data-tool-list]') as HTMLElement;
+			const toolCount = $('[data-tool-count]') as HTMLElement;
+
+			const log = (line: string) => {
+				logEl.textContent = `${logEl.textContent}${logEl.textContent ? '\n' : ''}${line}`.split('\n').slice(-40).join('\n');
+				logEl.scrollTop = logEl.scrollHeight;
+			};
+
+			function renderTools() {
+				const tools = mcp.listTools();
+				toolCount.textContent = String(tools.length);
+				toolList.innerHTML = tools
+					.map(
+						(t) =>
+							`<li><code>${t.name}</code><span>${(t.description || '').replace(/</g, '&lt;').slice(0, 96)}…</span></li>`,
+					)
+					.join('');
+			}
+			mcp.addEventListener('toolschanged', renderTools);
+			renderTools();
+
+			const openConsole = () => consoleEl.classList.remove('is-collapsed');
+			$('[data-console-toggle]')?.addEventListener('click', () =>
+				consoleEl.classList.toggle('is-collapsed'),
+			);
+			document
+				.querySelectorAll('[data-open-console]')
+				.forEach((b) => b.addEventListener('click', openConsole));
+
+			document.addEventListener('webmcp:highlight', (e) => {
+				log(`→ highlight  ${(e as CustomEvent).detail.described}`);
+			});
+
+			// manual tool calls — routed through navigator.modelContext for real
+			$('[data-manual-highlight]')?.addEventListener('click', async () => {
+				const ref = ($('[data-manual-ref]') as HTMLInputElement).value.trim();
+				if (!ref) return;
+				log(`$ callTool("highlight", { text/selector: "${ref}" })`);
+				const r = await mcp.callTool('highlight', { selector: ref, text: ref });
+				log(`  ${r.content[0].text}`);
+			});
+			$('[data-manual-context]')?.addEventListener('click', async () => {
+				const ref = ($('[data-manual-ref]') as HTMLInputElement).value.trim();
+				const explain = ($('[data-manual-explain]') as HTMLInputElement).value.trim();
+				if (!ref || !explain) return;
+				log(`$ callTool("highlight_with_context", { ref: "${ref}" })`);
+				const r = await mcp.callTool('highlight_with_context', {
+					selector: ref,
+					text: ref,
+					explanation: explain,
+				});
+				log(`  ${r.content[0].text}`);
+			});
+
+			/* ---------------- the scripted "guided tour" ----------------
+			   This is app-authored content. The library does the highlighting
+			   and pacing; the page supplies the itinerary. A real agent would
+			   generate steps like these on the fly from list_landmarks + the
+			   user's question. */
+
+			type Step = {
+				view: string;
+				ref: Record<string, string>;
+				title: string;
+				explanation: string;
+				actionHint?: string;
+			};
+
+			const TOUR: Step[] = [
+				{
+					view: 'overview',
+					ref: { tourId: 'need-node' },
+					title: 'Check this prerequisite first',
+					explanation:
+						'The CLI is distributed as an npm package, so the gateway tooling rides on your Node install. Everything downstream — flashing, config — goes through it.',
+					actionHint: 'Run `node --version` in a terminal before moving on.',
+				},
+				{
+					view: 'install-cli',
+					ref: { tourId: 'install-tabs' },
+					title: 'Pick your install channel',
+					explanation:
+						'Same CLI, three delivery methods. npm is cross-platform; Homebrew and the curl script self-update. The code block below swaps to match your choice.',
+				},
+				{
+					view: 'install-cli',
+					ref: { tourId: 'verify-install' },
+					title: 'Always verify before you depend on it',
+					explanation:
+						'This runs `meadow --version` and checks the release channel is reachable. Doing it now means a mid-flash failure later is your hardware, not a broken CLI.',
+					actionHint: 'Click it — you should see a version and a ✓.',
+				},
+				{
+					view: 'flash-firmware',
+					ref: { tourId: 'flash-step-buttons' },
+					title: 'Bootloader mode is a button dance',
+					explanation:
+						'Holding BOOT while pulsing RESET starts the chip in its ROM bootloader instead of the (empty) firmware. The steady amber LED is your confirmation it worked.',
+				},
+				{
+					view: 'flash-firmware',
+					ref: { tourId: 'detect-device' },
+					title: 'Detect before you flash',
+					explanation:
+						"This enumerates USB serial devices and matches Meadowlark's vendor ID. Until a device shows up, the Flash button stays disabled — that's deliberate, not a bug.",
+					actionHint: 'Click Detect device; the Flash button unlocks.',
+				},
+				{
+					view: 'configure',
+					ref: { tourId: 'region-select' },
+					title: 'Region is not cosmetic',
+					explanation:
+						'It sets the radio band and legal duty-cycle limits. A mismatch between gateway and sensor means they literally cannot hear each other — the #1 cause of "sensor never pairs".',
+				},
+				{
+					view: 'configure',
+					ref: { tourId: 'test-connection' },
+					title: 'Test the broker before saving',
+					explanation:
+						'Saving reboots the gateway onto the new config. Testing first — a TLS handshake against your MQTT endpoint — catches a typo while it costs you seconds, not a reboot cycle.',
+					actionHint: 'Try it with an `mqtts://` endpoint, then without, to see the guard.',
+				},
+				{
+					view: 'pair-sensor',
+					ref: { tourId: 'enter-pairing' },
+					title: 'Pairing is a timed key exchange',
+					explanation:
+						'The gateway opens a 60-second window to swap keys with a sensor. After that, readings from an unpaired sensor are dropped. You can re-run this any time to add more.',
+					actionHint: 'Enter pairing mode, then hold the sensor button for 5s.',
+				},
+				{
+					view: 'troubleshooting',
+					ref: { tourId: 'tb-pairing' },
+					title: 'When something goes wrong, start here',
+					explanation:
+						'Most setup failures trace back to three things: a power-only USB cable, 5 GHz Wi-Fi, or a region mismatch. This section is ordered by how often each one bites.',
+				},
+			];
+
+			let touring = false;
+			const playBtn = $('[data-play-tour]') as HTMLButtonElement;
+			const stopBtn = $('[data-stop-tour]') as HTMLButtonElement;
+
+			async function playTour() {
+				if (touring) return;
+				touring = true;
+				playBtn.hidden = true;
+				stopBtn.hidden = false;
+				openConsole();
+				consoleEl.classList.add('is-collapsed'); // get the panel out of the way
+				log('▶ guided tour started');
+
+				for (let i = 0; i < TOUR.length && touring; i++) {
+					const s = TOUR[i];
+					activateView(s.view);
+					await new Promise((r) => setTimeout(r, 260));
+					const res = await layer.highlightWithContext(
+						s.ref,
+						{
+							title: s.title,
+							explanation: s.explanation,
+							actionHint: s.actionHint,
+							step: i + 1,
+							totalSteps: TOUR.length,
+						},
+						{ await: 'dismiss' },
+					);
+					log(`  step ${i + 1}/${TOUR.length} · ${res.dismissedBy}`);
+					if (res.dismissedBy === 'close' || res.dismissedBy === 'escape') break;
+				}
+
+				layer.clear();
+				log(touring ? '✓ tour complete' : '■ tour stopped');
+				touring = false;
+				playBtn.hidden = false;
+				stopBtn.hidden = true;
+				consoleEl.classList.remove('is-collapsed');
+			}
+
+			playBtn.addEventListener('click', playTour);
+			stopBtn.addEventListener('click', () => {
+				touring = false;
+				layer.clear();
+			});
+		</script>
+
+		<style is:global>
+			:root {
+				color-scheme: light dark;
+				--bg: #fbfaff;
+				--panel: #ffffff;
+				--ink: #1c1a2e;
+				--muted: #6b6880;
+				--line: #e6e2f2;
+				--accent: #7c3aed;
+				--accent-soft: #f1ebfe;
+				--code-bg: #f4f1fb;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--bg: #131120;
+					--panel: #1b1830;
+					--ink: #eae7f6;
+					--muted: #a29fb8;
+					--line: #2e2a45;
+					--accent: #a78bfa;
+					--accent-soft: #241f3c;
+					--code-bg: #221d38;
+				}
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+				background: var(--bg);
+				color: var(--ink);
+				line-height: 1.6;
+			}
+			code,
+			kbd,
+			pre {
+				font-family: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
+			}
+			code {
+				background: var(--code-bg);
+				padding: 0.1em 0.4em;
+				border-radius: 5px;
+				font-size: 0.88em;
+			}
+			kbd {
+				background: var(--panel);
+				border: 1px solid var(--line);
+				border-bottom-width: 2px;
+				border-radius: 5px;
+				padding: 0.05em 0.4em;
+				font-size: 0.85em;
+			}
+		</style>
+
+		<style>
+			.shell {
+				display: grid;
+				grid-template-columns: 250px minmax(0, 1fr);
+				min-height: 100vh;
+				max-width: 1180px;
+				margin: 0 auto;
+			}
+
+			/* sidebar */
+			.sidebar {
+				border-right: 1px solid var(--line);
+				padding: 3.2rem 1rem 2rem;
+				position: sticky;
+				top: 0;
+				align-self: start;
+				height: 100vh;
+				overflow-y: auto;
+			}
+			.product {
+				display: flex;
+				gap: 0.7rem;
+				align-items: center;
+				padding: 0 0.5rem 1.2rem;
+			}
+			.product .logo {
+				width: 34px;
+				height: 34px;
+				border-radius: 9px;
+				background: linear-gradient(135deg, var(--accent), #ec4899);
+				flex: none;
+			}
+			.product strong {
+				display: block;
+				font-size: 0.95rem;
+			}
+			.product span {
+				font-size: 0.78rem;
+				color: var(--muted);
+			}
+			.sidebar nav {
+				display: flex;
+				flex-direction: column;
+				gap: 2px;
+			}
+			.nav-link {
+				text-align: left;
+				border: 0;
+				background: transparent;
+				color: var(--muted);
+				font: inherit;
+				font-size: 0.9rem;
+				padding: 0.5rem 0.65rem;
+				border-radius: 8px;
+				cursor: pointer;
+			}
+			.nav-link:hover {
+				background: var(--accent-soft);
+				color: var(--ink);
+			}
+			.nav-link[aria-current='page'] {
+				background: var(--accent-soft);
+				color: var(--accent);
+				font-weight: 600;
+			}
+			.side-note {
+				margin-top: 1.5rem;
+				padding: 0 0.65rem;
+				font-size: 0.78rem;
+				color: var(--muted);
+			}
+
+			/* content */
+			.content {
+				padding: 3rem 2.6rem 6rem;
+				min-width: 0;
+			}
+			.view {
+				display: none;
+				max-width: 46rem;
+			}
+			.view.is-active {
+				display: block;
+				animation: fade 0.22s ease;
+			}
+			@keyframes fade {
+				from {
+					opacity: 0;
+					transform: translateY(4px);
+				}
+				to {
+					opacity: 1;
+					transform: none;
+				}
+			}
+			@media (prefers-reduced-motion: reduce) {
+				.view.is-active {
+					animation: none;
+				}
+			}
+			h1 {
+				font-size: 1.7rem;
+				margin: 0 0 0.4rem;
+				letter-spacing: -0.02em;
+			}
+			h2 {
+				font-size: 1.05rem;
+				margin: 2rem 0 0.6rem;
+			}
+			.lede {
+				font-size: 1.05rem;
+				color: var(--muted);
+				margin-top: 0;
+			}
+			.needs,
+			.steps {
+				padding-left: 1.2rem;
+			}
+			.needs li,
+			.steps li {
+				margin: 0.35rem 0;
+			}
+			pre {
+				background: var(--code-bg);
+				border: 1px solid var(--line);
+				border-radius: 10px;
+				padding: 0.9rem 1rem;
+				overflow-x: auto;
+				font-size: 0.86rem;
+			}
+			pre code {
+				background: none;
+				padding: 0;
+			}
+
+			.callout-box {
+				border: 1px solid var(--line);
+				border-left: 3px solid var(--accent);
+				background: var(--panel);
+				border-radius: 10px;
+				padding: 1rem 1.1rem;
+				margin: 1.4rem 0;
+			}
+			.callout-box h2 {
+				margin: 0 0 0.3rem;
+				font-size: 0.98rem;
+			}
+			.callout-box p {
+				margin: 0;
+				font-size: 0.92rem;
+				color: var(--muted);
+			}
+
+			.btn-row {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.6rem;
+				margin: 1.2rem 0 0.4rem;
+			}
+			.btn {
+				font: inherit;
+				font-size: 0.88rem;
+				font-weight: 600;
+				padding: 0.45rem 0.9rem;
+				border-radius: 8px;
+				border: 1px solid var(--line);
+				background: var(--panel);
+				color: var(--ink);
+				cursor: pointer;
+			}
+			.btn:hover {
+				border-color: var(--accent);
+			}
+			.btn.primary {
+				background: var(--accent);
+				border-color: var(--accent);
+				color: #fff;
+			}
+			.btn:disabled {
+				opacity: 0.45;
+				cursor: not-allowed;
+			}
+			.result {
+				font-family: ui-monospace, Menlo, monospace;
+				font-size: 0.82rem;
+				background: var(--accent-soft);
+				border-radius: 8px;
+				padding: 0.6rem 0.8rem;
+				margin-top: 0.8rem;
+			}
+
+			.tabs {
+				display: inline-flex;
+				gap: 2px;
+				background: var(--code-bg);
+				border: 1px solid var(--line);
+				border-radius: 9px;
+				padding: 3px;
+				margin-bottom: 0.7rem;
+			}
+			.tab {
+				border: 0;
+				background: transparent;
+				font: inherit;
+				font-size: 0.83rem;
+				padding: 0.3rem 0.75rem;
+				border-radius: 6px;
+				color: var(--muted);
+				cursor: pointer;
+			}
+			.tab.is-active {
+				background: var(--panel);
+				color: var(--ink);
+			}
+
+			.device-panel,
+			.pairing {
+				display: flex;
+				align-items: center;
+				gap: 0.6rem;
+				border: 1px solid var(--line);
+				border-radius: 9px;
+				padding: 0.7rem 0.9rem;
+				margin: 1rem 0;
+				font-size: 0.9rem;
+			}
+			.dot {
+				width: 9px;
+				height: 9px;
+				border-radius: 50%;
+				background: var(--muted);
+				flex: none;
+			}
+			.dot.ok {
+				background: #22c55e;
+			}
+
+			.config-form {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 0.9rem 1rem;
+				margin-top: 0.5rem;
+			}
+			.config-form label {
+				display: flex;
+				flex-direction: column;
+				gap: 0.25rem;
+				font-size: 0.83rem;
+				color: var(--muted);
+			}
+			.config-form input,
+			.config-form select {
+				font: inherit;
+				font-size: 0.9rem;
+				padding: 0.45rem 0.55rem;
+				border: 1px solid var(--line);
+				border-radius: 7px;
+				background: var(--panel);
+				color: var(--ink);
+			}
+			.sensor-list {
+				list-style: none;
+				padding: 0;
+				margin: 1rem 0 0;
+			}
+			.sensor-list li {
+				border: 1px solid var(--line);
+				border-radius: 8px;
+				padding: 0.55rem 0.75rem;
+				font-size: 0.86rem;
+			}
+
+			.faq dt {
+				font-weight: 600;
+				margin-top: 1.2rem;
+			}
+			.faq dd {
+				margin: 0.3rem 0 0;
+				color: var(--muted);
+				font-size: 0.92rem;
+			}
+
+			/* console */
+			.console {
+				position: fixed;
+				right: 1rem;
+				bottom: 1rem;
+				width: min(370px, calc(100vw - 2rem));
+				background: var(--panel);
+				border: 1px solid var(--line);
+				border-radius: 12px;
+				box-shadow: 0 16px 44px rgba(20, 12, 40, 0.28);
+				z-index: 2147482000;
+				overflow: hidden;
+				font-size: 0.85rem;
+			}
+			.console-bar {
+				display: flex;
+				align-items: center;
+				gap: 0.55rem;
+				width: 100%;
+				border: 0;
+				background: transparent;
+				color: var(--ink);
+				font: inherit;
+				padding: 0.7rem 0.85rem;
+				cursor: pointer;
+			}
+			.pill {
+				background: var(--accent);
+				color: #fff;
+				font-size: 0.68rem;
+				font-weight: 700;
+				letter-spacing: 0.04em;
+				padding: 0.15rem 0.45rem;
+				border-radius: 5px;
+			}
+			.console-title {
+				color: var(--muted);
+				font-size: 0.8rem;
+			}
+			.count {
+				margin-left: auto;
+				background: var(--accent-soft);
+				color: var(--accent);
+				font-weight: 700;
+				border-radius: 999px;
+				padding: 0.05rem 0.5rem;
+				font-size: 0.78rem;
+			}
+			.chevron {
+				width: 8px;
+				height: 8px;
+				border-right: 2px solid var(--muted);
+				border-bottom: 2px solid var(--muted);
+				transform: rotate(45deg);
+				transition: transform 0.2s;
+			}
+			.console.is-collapsed .chevron {
+				transform: rotate(-135deg);
+			}
+			.console.is-collapsed .console-body {
+				display: none;
+			}
+			.console-body {
+				padding: 0 0.85rem 0.85rem;
+				border-top: 1px solid var(--line);
+			}
+			.console-intro {
+				color: var(--muted);
+				font-size: 0.78rem;
+				margin: 0.7rem 0;
+			}
+			.tool-list {
+				list-style: none;
+				padding: 0;
+				margin: 0 0 0.8rem;
+				display: flex;
+				flex-direction: column;
+				gap: 0.4rem;
+			}
+			.tool-list li {
+				display: flex;
+				flex-direction: column;
+				gap: 0.1rem;
+			}
+			.tool-list code {
+				font-size: 0.78rem;
+				color: var(--accent);
+				background: none;
+				padding: 0;
+			}
+			.tool-list span {
+				color: var(--muted);
+				font-size: 0.74rem;
+				line-height: 1.4;
+			}
+			.console-actions {
+				display: flex;
+				gap: 0.5rem;
+				margin-bottom: 0.7rem;
+			}
+			.console-actions .btn {
+				flex: 1;
+			}
+			.manual {
+				border-top: 1px solid var(--line);
+				padding-top: 0.6rem;
+			}
+			.manual summary {
+				cursor: pointer;
+				color: var(--muted);
+				font-size: 0.8rem;
+			}
+			.manual label {
+				display: flex;
+				flex-direction: column;
+				gap: 0.2rem;
+				font-size: 0.75rem;
+				color: var(--muted);
+				margin: 0.55rem 0;
+			}
+			.manual input {
+				font: inherit;
+				font-size: 0.82rem;
+				padding: 0.4rem 0.5rem;
+				border: 1px solid var(--line);
+				border-radius: 7px;
+				background: var(--bg);
+				color: var(--ink);
+			}
+			.log {
+				margin: 0.7rem 0 0;
+				max-height: 130px;
+				overflow-y: auto;
+				background: var(--code-bg);
+				border-radius: 8px;
+				padding: 0.55rem 0.65rem;
+				font-size: 0.74rem;
+				line-height: 1.5;
+				white-space: pre-wrap;
+				color: var(--muted);
+			}
+
+			@media (max-width: 860px) {
+				.shell {
+					grid-template-columns: 1fr;
+				}
+				.sidebar {
+					position: static;
+					height: auto;
+					border-right: 0;
+					border-bottom: 1px solid var(--line);
+					padding-top: 3.5rem;
+				}
+				.sidebar nav {
+					flex-flow: row wrap;
+				}
+				.content {
+					padding: 2rem 1.3rem 7rem;
+				}
+				.config-form {
+					grid-template-columns: 1fr;
+				}
+			}
+		</style>
+	</body>
+</html>
