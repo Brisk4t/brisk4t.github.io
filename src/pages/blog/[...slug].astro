@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import TableOfContents from '../../components/TableOfContents.astro';
 import { getCollection, render } from 'astro:content';
 import 'remark-github-blockquote-alert/alert.css';
 
@@ -12,10 +13,11 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description}>
+	<TableOfContents headings={headings} />
 	<article>
 		<h1>{post.data.title}</h1>
 		<time datetime={post.data.pubDate.toISOString()}>
