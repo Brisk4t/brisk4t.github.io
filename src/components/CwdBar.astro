@@ -1,0 +1,287 @@
+---
+/**
+ * Editor-style "cwd" / breadcrumb bar for a blog post.
+ *
+ * Mirrors the path strip a code editor shows above the document: where the file
+ * lives, plus the symbol the cursor sits in. The trail is rooted at the site
+ * home and walks down to the heading you're currently reading, showing every
+ * ancestor heading along the way:
+ *
+ *     Home  ›  blog  ›  <post title>  ›  <h2>  ›  <h3>  ›  …
+ *
+ * Every heading is pre-rendered as a (hidden) segment; the client script just
+ * unhides the nearest heading scrolled into view plus its ancestors, so the
+ * segments stay in document order without any DOM shuffling. Above the first
+ * heading, only Home › blog › title shows. Click any segment to jump to it.
+ *
+ * Usage (from a blog post page):
+ *     <CwdBar title={post.data.title} slug={post.id} headings={headings} />
+ */
+interface Heading {
+	depth: number;
+	slug: string;
+	text: string;
+}
+
+interface Props {
+	/** Post title — the document segment of the trail. */
+	title: string;
+	/** Post id/slug, used to link the document segment back to the post. */
+	slug: string;
+	/** Flat heading list from `render(post)` — drives the trailing segments. */
+	headings?: Heading[];
+}
+
+const { title, slug, headings = [] } = Astro.props;
+const crumbHeadings = headings.filter((h) => h.slug && h.text);
+
+const homeIcon =
+	'<path d="M3 11.5 12 4l9 7.5" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" />';
+const folderIcon =
+	'<path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h3.8l1.5 1.6h6.7A1.5 1.5 0 0 1 18 8.1v7.4A1.5 1.5 0 0 1 16.5 17h-12A1.5 1.5 0 0 1 3 15.5z" />';
+const docIcon =
+	'<path d="M6 3h6l4 4v11.5A1.5 1.5 0 0 1 14.5 20h-8A1.5 1.5 0 0 1 5 18.5v-14A1.5 1.5 0 0 1 6.5 3z" /><path d="M12 3v4h4" />';
+const hashIcon = '<path d="M8 4 6 20M16 4l-2 16M4 9h15M3.5 15h15" />';
+
+const svgAttrs = {
+	class: 'ic',
+	viewBox: '0 0 24 24',
+	fill: 'none',
+	stroke: 'currentColor',
+	'stroke-width': '1.6',
+	'stroke-linecap': 'round',
+	'stroke-linejoin': 'round',
+	'aria-hidden': 'true',
+} as const;
+---
+
+<div class="cwdbar-rail" aria-hidden="true"></div>
+<nav class="cwdbar" aria-label="Breadcrumb">
+	<ol class="cwdbar-track">
+		<li class="crumb">
+			<a href="/">
+				<svg {...svgAttrs} set:html={homeIcon} />
+				<span class="label">Home</span>
+			</a>
+		</li>
+		<li class="crumb">
+			<span class="sep" aria-hidden="true"></span>
+			<a href="/blog/">
+				<svg {...svgAttrs} set:html={folderIcon} />
+				<span class="label">blog</span>
+			</a>
+		</li>
+		<li class="crumb">
+			<span class="sep" aria-hidden="true"></span>
+			<a href={`/blog/${slug}/`} class="doc-crumb" aria-current="page">
+				<svg {...svgAttrs} set:html={docIcon} />
+				<span class="label">{title}</span>
+			</a>
+		</li>
+		{
+			crumbHeadings.map((h) => (
+				<li class="crumb heading-crumb" data-slug={h.slug} data-depth={h.depth} hidden>
+					<span class="sep" aria-hidden="true" />
+					<a href={`#${h.slug}`}>
+						<svg {...svgAttrs} set:html={hashIcon} />
+						<span class="label">{h.text}</span>
+					</a>
+				</li>
+			))
+		}
+	</ol>
+</nav>
+
+<style>
+	/* Reserve the vertical space the fixed bar occupies so it never covers the <h1>. */
+	.cwdbar-rail {
+		height: 2.5rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.cwdbar {
+		position: fixed;
+		top: 0;
+		left: 48px;
+		right: 0;
+		z-index: 6;
+		height: 2.5rem;
+		display: flex;
+		align-items: center;
+		background: light-dark(#f3f3f3, #1e1e1e);
+		border-bottom: 1px solid light-dark(#e0e0e0, #333);
+		font-family: system-ui, sans-serif;
+		font-size: 0.8rem;
+	}
+	@media (max-width: 640px) {
+		.cwdbar {
+			left: 0;
+		}
+	}
+	@media print {
+		.cwdbar-rail,
+		.cwdbar {
+			display: none;
+		}
+	}
+
+	/* Align the trail with the article column (mirrors <main>'s max-width + padding). */
+	.cwdbar-track {
+		width: 100%;
+		max-width: 960px;
+		margin: 0 auto;
+		padding: 0 1.5rem;
+		display: flex;
+		align-items: center;
+		list-style: none;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+	.cwdbar-track::-webkit-scrollbar {
+		display: none;
+	}
+
+	.crumb {
+		display: flex;
+		align-items: center;
+		flex: none;
+	}
+	.crumb[hidden] {
+		display: none;
+	}
+	/* The document + heading segments collapse when space runs out. The script
+	   assigns each an increasing flex-shrink toward the leaf, so the leaf gives
+	   way first and truncation trickles up the ancestors from there. */
+	.crumb:has(.doc-crumb),
+	.heading-crumb {
+		flex: 0 0 auto;
+		min-width: 2.75rem;
+	}
+
+	.crumb a {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.2rem 0.35rem;
+		border-radius: 4px;
+		color: inherit;
+		text-decoration: none;
+		opacity: 0.6;
+		white-space: nowrap;
+		min-width: 0;
+	}
+	.crumb a:hover {
+		opacity: 1;
+		background: color-mix(in srgb, currentColor 10%, transparent);
+	}
+	.heading-crumb.is-leaf a {
+		opacity: 0.95;
+	}
+
+	.label {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.ic {
+		flex: none;
+		width: 0.95rem;
+		height: 0.95rem;
+		opacity: 0.85;
+	}
+
+	.sep {
+		flex: none;
+		width: 0.9rem;
+		height: 0.9rem;
+		opacity: 0.4;
+	}
+	.sep::before {
+		content: '';
+		display: block;
+		width: 0;
+		height: 0;
+		margin: 0.2rem 0 0 0.3rem;
+		border-left: 4px solid currentColor;
+		border-top: 3.5px solid transparent;
+		border-bottom: 3.5px solid transparent;
+	}
+</style>
+
+<script>
+	function initCwdBar() {
+		const bar = document.querySelector<HTMLElement>('.cwdbar');
+		const article = document.querySelector<HTMLElement>('main article');
+		if (!bar || !article) return;
+
+		const crumbs = [...bar.querySelectorAll<HTMLElement>('.heading-crumb')].filter((li) =>
+			document.getElementById(li.dataset.slug || ''),
+		);
+		if (crumbs.length === 0) return;
+
+		const depthOf = (li: HTMLElement) => Number(li.dataset.depth) || 0;
+
+		crumbs.forEach((li) => {
+			li.querySelector('a')!.addEventListener('click', (e) => {
+				const target = document.getElementById(li.dataset.slug || '');
+				if (!target) return;
+				e.preventDefault();
+				target.scrollIntoView({ behavior: 'smooth' });
+				history.replaceState(null, '', `#${li.dataset.slug}`);
+			});
+		});
+
+		const docCrumb = bar.querySelector<HTMLElement>('.crumb:has(.doc-crumb)');
+
+		let renderedKey = '';
+		// `chain` is ordered shallowest ancestor -> leaf (document order).
+		function apply(chain: HTMLElement[]) {
+			const key = chain.map((li) => li.dataset.slug).join('>');
+			if (key === renderedKey) return;
+			renderedKey = key;
+
+			const shown = new Set(chain);
+			for (const li of crumbs) {
+				li.hidden = !shown.has(li);
+				li.classList.toggle('is-leaf', li === chain[chain.length - 1]);
+				li.style.flexShrink = '';
+			}
+
+			// Shrink priority grows toward the leaf; the post title yields last.
+			if (docCrumb) docCrumb.style.flexShrink = '1';
+			chain.forEach((li, i) => {
+				li.style.flexShrink = String((i + 2) * (i + 2));
+			});
+		}
+
+		// Nearest heading scrolled under the bar, plus each shallower ancestor above it.
+		function sync() {
+			const cutoff = bar!.getBoundingClientRect().bottom + 4;
+			let activeIdx = -1;
+			for (let i = 0; i < crumbs.length; i++) {
+				const el = document.getElementById(crumbs[i].dataset.slug || '');
+				if (el && el.getBoundingClientRect().top <= cutoff) activeIdx = i;
+				else break;
+			}
+			if (activeIdx < 0) return apply([]);
+
+			const chain: HTMLElement[] = [];
+			let minDepth = Infinity;
+			for (let i = activeIdx; i >= 0; i--) {
+				if (depthOf(crumbs[i]) < minDepth) {
+					chain.unshift(crumbs[i]);
+					minDepth = depthOf(crumbs[i]);
+				}
+			}
+			apply(chain);
+		}
+
+		window.addEventListener('scroll', sync, { passive: true });
+		window.addEventListener('resize', sync);
+		sync();
+	}
+
+	initCwdBar();
+	document.addEventListener('astro:after-swap', initCwdBar);
+</script>
