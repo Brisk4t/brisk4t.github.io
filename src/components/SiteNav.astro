@@ -1,25 +1,62 @@
 ---
 const links = [
-	{ href: '/', label: 'Home' },
-	{ href: '/blog/', label: 'Blog' },
-	{ href: '/lab/', label: 'Lab' },
+	{
+		href: '/',
+		label: 'Home',
+		// placeholder icon: house
+		icon: '<path d="M3 11.5 12 4l9 7.5" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" />',
+	},
+	{
+		href: '/blog/',
+		label: 'Blog',
+		// placeholder icon: lines of text
+		icon: '<rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 9h8" /><path d="M8 13h8" /><path d="M8 17h5" />',
+	},
+	{
+		href: '/lab/',
+		label: 'Lab',
+		// placeholder icon: flask
+		icon: '<path d="M9 3h6" /><path d="M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3" /><path d="M7.5 15h9" />',
+	},
 ];
 const path = Astro.url.pathname;
 ---
 
-<nav class="site-nav">
-	<div class="brand-group">
-		<a class="github" href="https://github.com/Brisk4t" aria-label="GitHub" target="_blank" rel="noopener noreferrer">
-			<span class="github-icon"></span>
+<nav class="side-nav" aria-label="Primary">
+	<div class="top">
+		<a
+			class="item github"
+			href="https://github.com/Brisk4t"
+			aria-label="GitHub"
+			target="_blank"
+			rel="noopener noreferrer"
+		>
+			<span class="icon github-icon"></span>
 		</a>
-		<a class="brand" href="/">brisk4t</a>
 	</div>
+	<hr class="sep" />
 	<ul>
 		{
 			links.map((link) => (
 				<li>
-					<a href={link.href} aria-current={path === link.href ? 'page' : undefined}>
-						{link.label}
+					<a
+						class="item"
+						href={link.href}
+						aria-label={link.label}
+						title={link.label}
+						aria-current={path === link.href ? 'page' : undefined}
+					>
+						<svg
+							class="icon"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.6"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+							set:html={link.icon}
+						/>
 					</a>
 				</li>
 			))
@@ -28,49 +65,112 @@ const path = Astro.url.pathname;
 </nav>
 
 <style>
-	.site-nav {
+	.side-nav {
+		position: fixed;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		width: 48px;
 		display: flex;
+		flex-direction: column;
 		align-items: center;
-		justify-content: space-between;
-		padding: 1rem 1.5rem;
-		font-family: system-ui, sans-serif;
+		gap: 0.5rem;
+		padding: 0.5rem 0;
+		background: light-dark(#f3f3f3, #1e1e1e);
+		border-right: 1px solid light-dark(#e0e0e0, #333);
+		z-index: 10;
 	}
-	.brand-group {
+	.top {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
-		gap: 1rem;
 	}
-	.brand {
-		font-weight: 700;
-		text-decoration: none;
-		color: inherit;
-		letter-spacing: -0.02em;
-	}
-	.github {
-		display: flex;
-	}
-	.github-icon {
-		display: block;
-		width: 30px;
-		height: 30px;
-		background-color: currentColor;
-		-webkit-mask: url('/icons/github.svg') no-repeat center / contain;
-		mask: url('/icons/github.svg') no-repeat center / contain;
+	.sep {
+		width: 24px;
+		height: 0;
+		margin: 0.25rem 0;
+		border: none;
+		border-top: 1px solid light-dark(#d0d0d0, #6e6e6e);
 	}
 	ul {
 		display: flex;
-		gap: 1.25rem;
+		flex-direction: column;
+		align-items: center;
 		list-style: none;
 		margin: 0;
 		padding: 0;
 	}
-	a {
-		text-decoration: none;
+	.item {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 48px;
+		height: 48px;
 		color: inherit;
-		opacity: 0.7;
+		opacity: 0.55;
+		transition: opacity 0.12s ease;
 	}
-	a:hover,
-	a[aria-current='page'] {
+	.item:hover {
 		opacity: 1;
+	}
+	.item[aria-current='page'] {
+		opacity: 1;
+	}
+	.item[aria-current='page']::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 6px;
+		bottom: 6px;
+		width: 2px;
+		background: currentColor;
+	}
+	.icon {
+		display: block;
+		width: 24px;
+		height: 24px;
+	}
+	.github-icon {
+		background-color: currentColor;
+		-webkit-mask: url('/icons/github.svg') no-repeat center / contain;
+		mask: url('/icons/github.svg') no-repeat center / contain;
+	}
+
+	@media (max-width: 640px) {
+		.side-nav {
+			top: auto;
+			right: 0;
+			bottom: 0;
+			width: 100%;
+			height: 48px;
+			flex-direction: row;
+			justify-content: center;
+			gap: 0;
+			padding: 0;
+			border-right: none;
+			border-top: 1px solid light-dark(#e0e0e0, #333);
+		}
+		.top {
+			flex-direction: row;
+		}
+		.sep {
+			width: 0;
+			height: 24px;
+			margin: 0 0.25rem;
+			border-top: none;
+			border-left: 1px solid light-dark(#d0d0d0, #6e6e6e);
+		}
+		ul {
+			flex-direction: row;
+		}
+		.item[aria-current='page']::before {
+			left: 6px;
+			right: 6px;
+			top: 0;
+			bottom: auto;
+			width: auto;
+			height: 2px;
+		}
 	}
 </style>

@@ -67,11 +67,18 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 		margin: 0;
 		font-family: system-ui, sans-serif;
 		line-height: 1.5;
+		padding-left: 48px;
 	}
 	main {
 		max-width: 960px;
 		margin: 0 auto;
 		padding: 1rem 1.5rem 1.5rem;
+	}
+	@media (max-width: 640px) {
+		body {
+			padding-left: 0;
+			padding-bottom: 48px;
+		}
 	}
 	footer {
 		text-align: center;

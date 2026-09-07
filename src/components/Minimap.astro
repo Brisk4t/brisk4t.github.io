@@ -28,7 +28,9 @@
 			display: block;
 			position: fixed;
 			top: 6rem;
-			right: calc((100vw - 960px) / 2 - 14rem);
+			/* Content column is centered inside (100vw - 48px sidebar), so it sits
+			   24px right of the viewport centerline — pull the minimap in to match. */
+			right: calc((100vw - 960px) / 2 - 14rem - 24px);
 			width: 13rem;
 			height: calc(100vh - 9rem);
 			z-index: 5;
