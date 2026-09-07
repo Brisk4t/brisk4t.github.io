@@ -14,7 +14,7 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 		<meta name="description" content={description} />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title} · brisk4t</title>
@@ -77,7 +77,7 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 	@media (max-width: 640px) {
 		body {
 			padding-left: 0;
-			padding-bottom: 48px;
+			padding-bottom: calc(48px + env(safe-area-inset-bottom));
 		}
 	}
 	footer {
