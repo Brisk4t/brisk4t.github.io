@@ -1,0 +1,178 @@
+---
+/**
+ * Editor-style minimap for a long article.
+ *
+ * Renders a scaled-down clone of the page's <article> in the right gutter
+ * (wide screens only). A viewport rectangle tracks the visible region; click
+ * or drag anywhere on the minimap to scroll the page to that spot.
+ *
+ * Usage (from a blog post page):  <Minimap />
+ * Expects a single `main article` element on the page.
+ */
+---
+
+<div class="minimap" aria-hidden="true">
+	<div class="minimap-canvas">
+		<div class="minimap-clone-wrap"></div>
+		<div class="minimap-viewport"></div>
+	</div>
+</div>
+
+<style>
+	.minimap {
+		display: none;
+	}
+	/* Same breakpoint the TOC uses to dock into the gutter. */
+	@media (min-width: 1500px) {
+		.minimap {
+			display: block;
+			position: fixed;
+			top: 6rem;
+			right: calc((100vw - 960px) / 2 - 14rem);
+			width: 13rem;
+			height: calc(100vh - 9rem);
+			z-index: 5;
+		}
+	}
+	@media print {
+		.minimap {
+			display: none;
+		}
+	}
+	.minimap-canvas {
+		position: relative;
+		overflow: hidden;
+		cursor: pointer;
+
+		box-shadow: 0 1px 8px color-mix(in srgb, currentColor 8%, transparent);
+		touch-action: none;
+	}
+	.minimap-clone-wrap {
+		transform-origin: top left;
+		opacity: 0.55;
+		pointer-events: none;
+		user-select: none;
+	}
+	.minimap-clone-wrap :global(*) {
+		/* Keep the preview cheap: no animation, no interaction inside the clone. */
+		animation: none !important;
+		transition: none !important;
+		pointer-events: none !important;
+	}
+	.minimap-viewport {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 0;
+		height: 0;
+		background: color-mix(in srgb, currentColor 10%, transparent);
+		pointer-events: none;
+	}
+	.minimap-canvas:hover .minimap-viewport {
+		background: color-mix(in srgb, currentColor 16%, transparent);
+	}
+</style>
+
+<script>
+	function initMinimap() {
+		const mount = document.querySelector<HTMLElement>('.minimap');
+		const article = document.querySelector<HTMLElement>('main article');
+		if (!mount || !article) return;
+
+		const canvas = mount.querySelector<HTMLElement>('.minimap-canvas')!;
+		const wrap = mount.querySelector<HTMLElement>('.minimap-clone-wrap')!;
+		const view = mount.querySelector<HTMLElement>('.minimap-viewport')!;
+		const mq = window.matchMedia('(min-width: 1500px)');
+
+		let scale = 1;
+		let articleTopDoc = 0;
+		let articleHeight = 0;
+		let dragging = false;
+		let rafId = 0;
+
+		function buildClone() {
+			const clone = article!.cloneNode(true) as HTMLElement;
+			clone.removeAttribute('id');
+			clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+			clone.querySelectorAll('script').forEach((el) => el.remove());
+			clone.querySelectorAll('img').forEach((img) => {
+				img.loading = 'eager';
+				img.addEventListener('load', measure, { once: true });
+			});
+			wrap.replaceChildren(clone);
+		}
+
+		function measure() {
+			if (!mq.matches) return;
+			const rect = article!.getBoundingClientRect();
+			articleTopDoc = rect.top + window.scrollY;
+			articleHeight = article!.offsetHeight;
+			const artWidth = article!.offsetWidth || 960;
+			const maxW = mount!.clientWidth;
+			const maxH = mount!.clientHeight;
+			scale = Math.min(maxW / artWidth, maxH / articleHeight);
+			wrap.style.width = artWidth + 'px';
+			wrap.style.transform = `scale(${scale})`;
+			canvas.style.width = artWidth * scale + 'px';
+			canvas.style.height = articleHeight * scale + 'px';
+			update();
+		}
+
+		function update() {
+			rafId = 0;
+			const canvasH = articleHeight * scale;
+			const visH = Math.min(window.innerHeight * scale, canvasH);
+			let top = (window.scrollY - articleTopDoc) * scale;
+			top = Math.max(0, Math.min(top, canvasH - visH));
+			view.style.height = visH + 'px';
+			view.style.transform = `translateY(${top}px)`;
+		}
+
+		function onScroll() {
+			if (!rafId) rafId = requestAnimationFrame(update);
+		}
+
+		function scrollToCanvasY(clientY: number, smooth: boolean) {
+			const y = clientY - canvas.getBoundingClientRect().top;
+			const docY = articleTopDoc + y / scale;
+			window.scrollTo({
+				top: docY - window.innerHeight / 2,
+				behavior: smooth ? 'smooth' : 'auto',
+			});
+		}
+
+		canvas.addEventListener('pointerdown', (e) => {
+			e.preventDefault();
+			dragging = true;
+			canvas.setPointerCapture(e.pointerId);
+			scrollToCanvasY(e.clientY, true);
+		});
+		canvas.addEventListener('pointermove', (e) => {
+			if (dragging) scrollToCanvasY(e.clientY, false);
+		});
+		const endDrag = (e: PointerEvent) => {
+			dragging = false;
+			if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+		};
+		canvas.addEventListener('pointerup', endDrag);
+		canvas.addEventListener('pointercancel', endDrag);
+
+		window.addEventListener('scroll', onScroll, { passive: true });
+		window.addEventListener('resize', measure);
+		mq.addEventListener('change', measure);
+		window.addEventListener('load', measure);
+		new ResizeObserver(measure).observe(article);
+
+		function activate() {
+			if (!mq.matches || wrap.childElementCount > 0) return;
+			buildClone();
+			measure();
+		}
+
+		mq.addEventListener('change', activate);
+		activate();
+	}
+
+	initMinimap();
+	document.addEventListener('astro:after-swap', initMinimap);
+</script>

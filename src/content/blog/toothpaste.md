@@ -156,7 +156,7 @@ The [Microchip ATECC608B](https://www.microchip.com/en-us/product/atecc608b) Cry
 Unfortunately dealing with programming the chip itself is an adventure I'll cover elsewhere once I make sure I won't be DMCAd for uttering the dark words of the NDA (which i never received btw, thanks Microchip).
 
 ### Look at this caveman \*scoffs\*
-![ToothPaste Build](https://raw.githubusercontent.com/Brisk4t/ToothPaste/main/images/ToothPaste_BOM.jpg)
+![ToothPaste Build](https://raw.githubusercontent.com/Brisk4t/ToothPaste/main/firmware/images/ToothPaste_BOM.jpg)
 
 
 # Security 🔑

@@ -1,0 +1,224 @@
+---
+/**
+ * Nested, collapsible table of contents for a Markdown post.
+ *
+ * Root usage (from a page):   <TableOfContents headings={headings} />
+ * The component recurses into itself via <Astro.self> to render child lists.
+ */
+interface Heading {
+	depth: number;
+	slug: string;
+	text: string;
+}
+
+interface TocItem extends Heading {
+	children: TocItem[];
+}
+
+interface Props {
+	/** Flat heading list from `render(post)` — pass this from the page. */
+	headings?: Heading[];
+	/** Internal: pre-built subtree passed during recursion. */
+	items?: TocItem[];
+}
+
+function buildTree(headings: Heading[]): TocItem[] {
+	if (headings.length === 0) return [];
+	// Normalise so the shallowest heading in the doc becomes the top level.
+	const minDepth = Math.min(...headings.map((h) => h.depth));
+	const root: TocItem[] = [];
+	const stack: TocItem[] = [];
+	for (const h of headings) {
+		const item: TocItem = { ...h, depth: h.depth - minDepth, children: [] };
+		while (stack.length && stack[stack.length - 1].depth >= item.depth) stack.pop();
+		if (stack.length === 0) root.push(item);
+		else stack[stack.length - 1].children.push(item);
+		stack.push(item);
+	}
+	return root;
+}
+
+const { headings, items } = Astro.props;
+const isRoot = items === undefined;
+const tree = items ?? buildTree((headings ?? []).filter((h) => h.slug && h.text));
+---
+
+{
+	tree.length > 0 && (
+		isRoot ? (
+			<aside class="toc" aria-label="Table of contents">
+				<nav>
+					<p class="toc-title">On this page</p>
+					<Astro.self items={tree} />
+				</nav>
+			</aside>
+		) : (
+			<ul class="toc-list">
+				{tree.map((item) => (
+					<li>
+						{item.children.length > 0 ? (
+							<details>
+								<summary>
+									<span class="toc-caret" aria-hidden="true" />
+									<a href={`#${item.slug}`}>{item.text}</a>
+								</summary>
+								<Astro.self items={item.children} />
+							</details>
+						) : (
+							<a class="toc-leaf" href={`#${item.slug}`}>
+								{item.text}
+							</a>
+						)}
+					</li>
+				))}
+			</ul>
+		)
+	)
+}
+
+<style>
+	.toc {
+		font-family: system-ui, sans-serif;
+		font-size: 0.85rem;
+		line-height: 1.4;
+	}
+	/* Inline above the article by default (narrow / mid screens). */
+	.toc {
+		margin: 0 0 1.5rem;
+	}
+	/* Wide screens with room beside the 960px article: dock it to the left. */
+	@media (min-width: 1500px) {
+		.toc {
+			position: fixed;
+			top: 6rem;
+			left: calc((100vw - 960px) / 2 - 16rem);
+			width: 15rem;
+			max-height: calc(100vh - 8rem);
+			overflow-y: auto;
+			padding-right: 0.75rem;
+			margin: 0;
+		}
+	}
+	.toc-title {
+		margin: 0 0 0.5rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		font-size: 0.7rem;
+		opacity: 0.6;
+	}
+	.toc-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	/* Nested lists get an indent + guide line. */
+	.toc-list .toc-list {
+		margin-left: 0.5rem;
+		padding-left: 0.6rem;
+		border-left: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+	}
+	.toc li {
+		margin: 0.15rem 0;
+	}
+	.toc a {
+		display: block;
+		padding: 0.15rem 0.25rem;
+		text-decoration: none;
+		color: inherit;
+		opacity: 0.7;
+		border-radius: 4px;
+	}
+	.toc a:hover {
+		opacity: 1;
+		background: color-mix(in srgb, currentColor 8%, transparent);
+	}
+	.toc a.is-active {
+		opacity: 1;
+		font-weight: 600;
+		background: color-mix(in srgb, currentColor 12%, transparent);
+	}
+	.toc details > summary {
+		display: flex;
+		align-items: center;
+		gap: 0.2rem;
+		list-style: none;
+		cursor: pointer;
+	}
+	.toc details > summary::-webkit-details-marker {
+		display: none;
+	}
+	.toc details > summary a {
+		flex: 1;
+	}
+	.toc-caret {
+		flex: none;
+		width: 0.9rem;
+		height: 0.9rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		opacity: 0.5;
+		transition: transform 0.15s ease;
+	}
+	.toc-caret::before {
+		content: '';
+		width: 0;
+		height: 0;
+		border-left: 4px solid currentColor;
+		border-top: 3.5px solid transparent;
+		border-bottom: 3.5px solid transparent;
+	}
+	.toc details[open] > summary .toc-caret {
+		transform: rotate(90deg);
+	}
+</style>
+
+<script>
+	// Scrollspy: highlight the TOC link for the heading currently in view.
+	function initToc() {
+		const toc = document.querySelector('.toc');
+		if (!toc) return;
+		const links = new Map<string, HTMLAnchorElement>();
+		toc.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
+			const id = decodeURIComponent(a.getAttribute('href')!.slice(1));
+			if (id) links.set(id, a);
+		});
+		const targets = [...links.keys()]
+			.map((id) => document.getElementById(id))
+			.filter((el): el is HTMLElement => el !== null);
+		if (targets.length === 0) return;
+
+		const allDetails = [...toc.querySelectorAll<HTMLDetailsElement>('details')];
+
+		let active: HTMLAnchorElement | null = null;
+		const setActive = (id: string) => {
+			const next = links.get(id) ?? null;
+			if (next === active) return;
+			active?.classList.remove('is-active');
+			next?.classList.add('is-active');
+			active = next;
+
+			// Expand only the active heading's ancestor group(s); collapse the rest.
+			const keepOpen = new Set<HTMLDetailsElement>();
+			for (let el = next?.closest('details') ?? null; el; el = el.parentElement?.closest('details') ?? null) {
+				keepOpen.add(el);
+			}
+			for (const d of allDetails) d.open = keepOpen.has(d);
+		};
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				const visible = entries
+					.filter((e) => e.isIntersecting)
+					.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+				if (visible[0]) setActive(visible[0].target.id);
+			},
+			{ rootMargin: '0px 0px -70% 0px', threshold: 0 },
+		);
+		targets.forEach((t) => observer.observe(t));
+	}
+
+	initToc();
+	document.addEventListener('astro:after-swap', initToc);
+</script>
