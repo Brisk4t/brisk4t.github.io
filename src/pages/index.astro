@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroTile from '../components/HeroTile.astro';
-import LcdDisplay from '../components/LcdDisplay.astro';
+import AsciiText from '../components/AsciiText.astro';
 import { getCollection } from 'astro:content';
 
 const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
@@ -15,9 +15,9 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 <BaseLayout title="Home">
 	<section>
 		<div class="hero">
-			<LcdDisplay line1="Brisk4t" avatarSrc="https://avatars.githubusercontent.com/u/31730769?s=200&v=4" avatarAlt="Brisk4t" />
+			<AsciiText text="Brisk4t" enableWaves={false} />
+			<h3>All my crimes.</h3>
 		</div>
-		<h3>All my crimes.</h3>
 	</section>
 
 	<section>
@@ -65,9 +65,14 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 <style>
 	.hero {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 1rem;
+		gap: 0.25rem;
+		text-align: center;
+	}
+	.hero h3 {
+		margin: 0;
 	}
 	.grid {
 		list-style: none;
