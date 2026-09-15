@@ -1,6 +1,7 @@
 ---
 import SiteNav from '../components/SiteNav.astro';
 import DigitalClock from '../components/DigitalClock.astro';
+import SiteTerminal from '../components/SiteTerminal.astro';
 
 interface Props {
 	title: string;
@@ -33,6 +34,7 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 		<footer>
 			<p>&copy; {new Date().getFullYear()} Brisk4t</p>
 		</footer>
+		<SiteTerminal />
 	</body>
 </html>
 

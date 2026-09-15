@@ -1,0 +1,431 @@
+---
+/**
+ * Global, collapsible VSCode-integrated-terminal-style dock, mounted once in
+ * BaseLayout (like SiteNav) so it's reachable from every page and always
+ * overlays page content when open.
+ *
+ * A tiny virtual filesystem with three directories — home, blog, lab — mirrors
+ * the site's real sections. `ls` lists each directory's entries; directories
+ * (blog, lab) are `cd`-able, and pages (posts/labs) are runnable commands that
+ * navigate the main view to that page, the way running a file "opens" it.
+ */
+import { getCollection } from 'astro:content';
+
+type Entry = { name: string; type: 'dir' | 'page'; href?: string; title?: string; external?: boolean };
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const fs: Record<'home' | 'blog' | 'lab', Entry[]> = {
+	home: [
+		{ name: 'blog', type: 'dir' },
+		{ name: 'lab', type: 'dir' },
+	],
+	blog: posts.map((post) => ({
+		name: post.id,
+		type: 'page',
+		href: `/blog/${post.id}/`,
+		title: post.data.title,
+	})),
+	lab: labs.map((lab) => ({
+		name: lab.data.slug,
+		type: 'page',
+		href: lab.data.url ?? `/lab/${lab.data.slug}/`,
+		title: lab.data.title,
+		external: Boolean(lab.data.url),
+	})),
+};
+
+const chevronIcon = '<path d="M18 15l-6-6-6 6" />';
+const terminalIcon = '<path d="M4 5h16v14H4z" /><path d="M7 9l3 3-3 3" /><path d="M12 15h5" />';
+---
+
+<div class="term-dock" id="term-dock">
+	<div class="term-window">
+		<button type="button" class="term-titlebar" id="term-toggle" aria-expanded="false" aria-controls="term-content">
+			<svg class="term-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={terminalIcon} />
+			<span>Terminal</span>
+			<svg class="term-tab-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={chevronIcon} />
+		</button>
+		<div class="term-content" id="term-content" hidden>
+			<div class="term-body" id="term-body">
+				<div class="term-lines" id="term-lines">
+					<div class="term-line term-muted">Welcome to brisk4t. Type <span class="term-cmd">help</span> to get started.</div>
+				</div>
+				<div class="term-inputline">
+					<span class="term-prompt" id="term-prompt">guest@brisk4t:~$</span>
+					<input
+						id="term-input"
+						class="term-input"
+						type="text"
+						autocomplete="off"
+						autocapitalize="off"
+						autocorrect="off"
+						spellcheck="false"
+						aria-label="Terminal input"
+					/>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script define:vars={{ fs }}>
+	function initSiteTerminal() {
+		const dock = document.querySelector('#term-dock');
+		if (!dock || dock.dataset.initialized) return;
+		dock.dataset.initialized = 'true';
+
+		const toggle = dock.querySelector('#term-toggle');
+		const content = dock.querySelector('#term-content');
+		const body = dock.querySelector('#term-body');
+		const lines = dock.querySelector('#term-lines');
+		const input = dock.querySelector('#term-input');
+		const promptEl = dock.querySelector('#term-prompt');
+
+		const dirs = ['home', 'blog', 'lab'];
+		let cwd = 'home';
+		const cmdHistory = [];
+		let historyIdx = -1;
+
+		function promptText(dir) {
+			return `guest@brisk4t:~${dir === 'home' ? '' : '/' + dir}$`;
+		}
+
+		function print(text, className) {
+			const div = document.createElement('div');
+			div.className = 'term-line' + (className ? ' ' + className : '');
+			div.textContent = text;
+			lines.appendChild(div);
+		}
+
+		function printEcho(command) {
+			const div = document.createElement('div');
+			div.className = 'term-line';
+			const p = document.createElement('span');
+			p.className = 'term-prompt-echo';
+			p.textContent = promptText(cwd) + ' ';
+			div.appendChild(p);
+			div.appendChild(document.createTextNode(command));
+			lines.appendChild(div);
+		}
+
+		function printCmdHelp(cmd, description) {
+			const div = document.createElement('div');
+			div.className = 'term-line';
+			const cmdSpan = document.createElement('span');
+			cmdSpan.className = 'term-cmd';
+			cmdSpan.textContent = cmd.padEnd(16, ' ');
+			div.appendChild(cmdSpan);
+			div.appendChild(document.createTextNode(description));
+			lines.appendChild(div);
+		}
+
+		function scrollToBottom() {
+			body.scrollTop = body.scrollHeight;
+		}
+
+		function setCwd(dir) {
+			cwd = dir;
+			promptEl.textContent = promptText(cwd);
+		}
+
+		function openPage(entry) {
+			print(`Opening ${entry.title}...`, 'term-info');
+			if (entry.external) {
+				window.open(entry.href, '_blank', 'noopener');
+			} else {
+				window.location.href = entry.href;
+			}
+		}
+
+		// Help command
+		function printHelp() {
+			print('Available commands:');
+			printCmdHelp('  help', 'show this help');
+			printCmdHelp('  ls', 'list entries in the current directory');
+			printCmdHelp('  cd <dir>', 'change directory (home, blog, lab, ..)');
+			printCmdHelp('  pwd', 'print working directory');
+			printCmdHelp('  clear', 'clear the terminal');
+			printCmdHelp('  home', 'jump straight to the site home page from anywhere');
+			printCmdHelp('  <name>', 'run a listed entry — cd into a directory, or navigate to a page');
+		}
+
+		// ls
+		function listEntries() {
+			const entries = fs[cwd] || [];
+			if (entries.length === 0) {
+				print('(empty)', 'term-muted');
+				return;
+			}
+			const div = document.createElement('div');
+			div.className = 'term-line term-ls';
+			entries.forEach((entry) => {
+				const span = document.createElement('span');
+				span.className = entry.type === 'dir' ? 'term-dir' : 'term-file';
+				span.textContent = entry.type === 'dir' ? entry.name + '/' : entry.name;
+				div.appendChild(span);
+			});
+			lines.appendChild(div);
+		}
+
+		// Main command runner
+		function runCommand(raw) {
+			const trimmed = raw.trim();
+			printEcho(raw);
+			if (!trimmed) return;
+
+			cmdHistory.push(trimmed);
+			historyIdx = cmdHistory.length;
+
+			const [cmd, ...args] = trimmed.split(/\s+/);
+
+			if (cmd === 'clear') {
+				lines.innerHTML = '';
+				return;
+			}
+			if (cmd === 'help') {
+				printHelp();
+				return;
+			}
+			if (cmd === 'pwd') {
+				print(`/${cwd === 'home' ? '' : cwd}`);
+				return;
+			}
+			if (cmd === 'ls') {
+				listEntries();
+				return;
+			}
+			if (cmd === 'home') {
+				print('Opening Home...', 'term-info');
+				window.location.href = '/';
+				return;
+			}
+			if (cmd === 'cd') {
+				const target = args[0];
+				if (!target) {
+					print(`/${cwd === 'home' ? '' : cwd}`);
+					return;
+				}
+				const resolved = target === '..' ? 'home' : target;
+				if (dirs.includes(resolved)) {
+					setCwd(resolved);
+				} else {
+					print(`cd: no such directory: ${target}`, 'term-error');
+				}
+				return;
+			}
+
+			const entries = fs[cwd] || [];
+			const match = entries.find((e) => e.name === cmd);
+			if (match) {
+				if (match.type === 'dir') {
+					setCwd(match.name);
+				} else {
+					openPage(match);
+				}
+				return;
+			}
+
+			if (dirs.includes(cmd)) {
+				setCwd(cmd);
+				return;
+			}
+
+			print(`command not found: ${cmd}`, 'term-error');
+		}
+
+		input.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				const val = input.value;
+				input.value = '';
+				runCommand(val);
+				scrollToBottom();
+			} else if (e.key === 'ArrowUp') {
+				e.preventDefault();
+				if (cmdHistory.length === 0) return;
+				historyIdx = Math.max(0, historyIdx - 1);
+				input.value = cmdHistory[historyIdx] ?? '';
+			} else if (e.key === 'ArrowDown') {
+				e.preventDefault();
+				if (cmdHistory.length === 0) return;
+				historyIdx = Math.min(cmdHistory.length, historyIdx + 1);
+				input.value = cmdHistory[historyIdx] ?? '';
+			}
+		});
+
+		body.addEventListener('click', () => input.focus());
+
+		function setOpen(open) {
+			content.hidden = !open;
+			toggle.setAttribute('aria-expanded', String(open));
+			dock.classList.toggle('is-open', open);
+			try {
+				localStorage.setItem('term-open', open ? '1' : '0');
+			} catch {
+				/* ignore: private browsing / blocked storage */
+			}
+			if (open) input.focus();
+		}
+
+		toggle.addEventListener('click', () => setOpen(content.hidden));
+
+		let startOpen = false;
+		try {
+			startOpen = localStorage.getItem('term-open') === '1';
+		} catch {
+			/* ignore: private browsing / blocked storage */
+		}
+
+		setCwd('home');
+		setOpen(startOpen);
+	}
+
+	initSiteTerminal();
+	document.addEventListener('astro:after-swap', initSiteTerminal);
+</script>
+
+<style>
+	.term-dock {
+		position: fixed;
+		left: 48px;
+		right: 0;
+		bottom: 0;
+		z-index: 20;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+		display: flex;
+		flex-direction: column;
+		pointer-events: none;
+	}
+	.term-dock > * {
+		pointer-events: auto;
+	}
+	@media (max-width: 640px) {
+		.term-dock {
+			left: 0;
+			bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+		}
+	}
+
+	/* --- terminal window: a single bordered box, always anchored flush to the
+	   bottom of the viewport. The titlebar doubles as the show/hide toggle,
+	   so there's never a second element sitting below the window creating a
+	   gap before the actual bottom edge. --- */
+	.term-window {
+		width: 100%;
+		border: 1px solid light-dark(#d0d0d0, #333);
+		border-bottom: none;
+		border-radius: 6px 6px 0 0;
+		overflow: hidden;
+		box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
+	}
+	.term-titlebar {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		padding: 0.4rem 0.75rem;
+		border: none;
+		background: light-dark(#f3f3f3, #252526);
+		color: inherit;
+		font: inherit;
+		font-size: 0.75rem;
+		opacity: 0.85;
+		cursor: pointer;
+	}
+	.term-dock.is-open .term-titlebar {
+		border-bottom: 1px solid light-dark(#d0d0d0, #333);
+	}
+	.term-titlebar:hover {
+		background: light-dark(#e8e8e8, #2d2d2d);
+	}
+	.term-tab-icon {
+		width: 0.95rem;
+		height: 0.95rem;
+	}
+	.term-tab-chevron {
+		width: 0.85rem;
+		height: 0.85rem;
+		transition: transform 0.15s ease;
+	}
+	.term-dock.is-open .term-tab-chevron {
+		transform: rotate(180deg);
+	}
+	.term-content[hidden] {
+		display: none;
+	}
+	.term-body {
+		background: light-dark(#ffffff, #1e1e1e);
+		color: light-dark(#1e1e1e, #cccccc);
+		padding: 0.6rem 0.75rem;
+		max-height: 320px;
+		overflow-y: auto;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		cursor: text;
+	}
+	/*
+	 * :global() below: these classes are also applied to <div>/<span> elements
+	 * created at runtime by the terminal script (createElement + className),
+	 * which never receive Astro's scoped data-astro-cid attribute, so a plain
+	 * scoped selector would silently never match them.
+	 */
+	.term-prompt {
+		color: light-dark(#098658, #4ec9b0);
+		font-weight: 600;
+		margin-right: 0.5ch;
+	}
+	:global(.term-line) {
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+	:global(.term-prompt-echo) {
+		color: light-dark(#098658, #4ec9b0);
+		font-weight: 600;
+		margin-right: 0.5ch;
+	}
+	:global(.term-muted) {
+		opacity: 0.6;
+	}
+	:global(.term-info) {
+		color: light-dark(#0451a5, #4fc1ff);
+	}
+	:global(.term-error) {
+		color: light-dark(#cd3131, #f14c4c);
+	}
+	:global(.term-cmd) {
+		color: light-dark(#098658, #4ec9b0);
+		white-space: pre;
+	}
+	:global(.term-ls) {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 1.25rem;
+	}
+	:global(.term-dir) {
+		color: light-dark(#0451a5, #4fc1ff);
+	}
+	:global(.term-file) {
+		color: inherit;
+	}
+	.term-inputline {
+		display: flex;
+		align-items: center;
+		gap: 0.5ch;
+	}
+	.term-input {
+		flex: 1;
+		min-width: 0;
+		border: none;
+		outline: none;
+		background: transparent;
+		color: inherit;
+		font: inherit;
+		caret-color: currentColor;
+	}
+</style>
