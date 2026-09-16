@@ -3,7 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroTile from '../components/HeroTile.astro';
 import AsciiText from '../components/AsciiText.astro';
 import MagnetLines from '../components/MagnetLines.astro';
-import InfiniteSpiral from '../components/InfiniteSpiral.astro';
+import Masonry from '../components/Masonry.astro';
 import { getCollection } from 'astro:content';
 
 const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
@@ -54,7 +54,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 				<a href="/lab/">See all &rarr;</a>
 			</div>
 			{(() => {
-				const spiralItems = labs
+				const masonryItems = labs
 					.filter((lab) => lab.data.heroImage)
 					.map((lab) => ({
 						src: lab.data.heroImage!,
@@ -66,20 +66,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 						description: lab.data.description,
 						longDescription: lab.data.longDescription,
 					}));
-				return (
-					<InfiniteSpiral
-						items={spiralItems}
-						animationMode="all"
-						pauseOnHover={true}
-						grayscale={0}
-						cardsPerTurn={spiralItems.length}
-						speed={0.18}
-						cardWidth={170}
-						cardHeight={170}
-						radius={190}
-						verticalSpacing={110}
-					/>
-				);
+				return <Masonry items={masonryItems} />;
 			})()}
 		</section>
 	</div>
@@ -132,8 +119,8 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	.section-heading h2 {
 		margin: 0;
 	}
-	.col-scrapbook :global(.infinite-spiral) {
-		height: 46rem;
+	.col-scrapbook :global(.masonry) {
+		margin-top: 2rem;
 	}
 	@media (max-width: 800px) {
 		.split {
@@ -150,7 +137,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		margin-top: 2rem;
 		display: grid;
 		justify-content: end;
-		gap: 4rem 2.5rem;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 260px));
+		gap: 2rem;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 300px));
 	}
 </style>

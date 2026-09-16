@@ -1,0 +1,324 @@
+---
+// Ported from https://reactbits.dev/components/masonry
+interface MasonryItem {
+	src: string;
+	alt?: string;
+	href?: string;
+	target?: string;
+	label?: string;
+	id?: string;
+	title?: string;
+	description?: string;
+	longDescription?: string;
+}
+
+interface Props {
+	items: (string | MasonryItem)[];
+	gap?: number;
+	duration?: number;
+	stagger?: number;
+	ease?: string;
+	animateFrom?: 'top' | 'bottom' | 'left' | 'right' | 'center' | 'random';
+	scaleOnHover?: boolean;
+	hoverScale?: number;
+	blurToFocus?: boolean;
+	class?: string;
+}
+
+const {
+	items,
+	gap = 6,
+	duration = 0.6,
+	stagger = 0.05,
+	ease = 'cubic-bezier(0.22, 1, 0.36, 1)',
+	animateFrom = 'bottom',
+	scaleOnHover = true,
+	hoverScale = 0.96,
+	blurToFocus = true,
+	class: className = '',
+} = Astro.props;
+
+const normalizedItems: MasonryItem[] = items.map((item, index) =>
+	typeof item === 'string' ? { src: item, alt: `Masonry image ${index + 1}`, id: `m-${index}` } : { alt: `Masonry image ${index + 1}`, id: `m-${index}`, ...item },
+);
+---
+
+<div
+	class:list={['masonry', className]}
+	data-gap={gap}
+	data-duration={duration}
+	data-stagger={stagger}
+	data-animate-from={animateFrom}
+	data-scale-on-hover={scaleOnHover ? '1' : '0'}
+	data-hover-scale={hoverScale}
+	data-blur-to-focus={blurToFocus ? '1' : '0'}
+	style={{ '--masonry-gap': `${gap}px`, '--masonry-duration': `${duration}s`, '--masonry-ease': ease }}
+>
+	{
+		normalizedItems.map((item, index) => {
+			const Card = item.href ? 'a' : 'div';
+			return (
+				<Card
+					class="masonry__item"
+					data-key={item.id}
+					data-index={index}
+					href={item.href}
+					target={item.target}
+					rel={item.target === '_blank' ? 'noreferrer' : undefined}
+					aria-label={item.label ?? item.alt}
+				>
+					<div class="masonry__content">
+						<img class="masonry__image" src={item.src} alt={item.alt} loading={index < 6 ? 'eager' : 'lazy'} draggable={false} />
+						<div class="masonry__overlay" />
+						{item.title && <span class="masonry__title">{item.title}</span>}
+						{(item.description || item.longDescription) && (
+							<div class="masonry__desc-stack">
+								{item.description && <p class="masonry__description">{item.description}</p>}
+								{item.longDescription && <p class="masonry__description-long">{item.longDescription}</p>}
+							</div>
+						)}
+					</div>
+				</Card>
+			);
+		})
+	}
+</div>
+
+<script>
+	function setupMasonry(root: HTMLElement) {
+		const items = Array.from(root.querySelectorAll<HTMLElement>('.masonry__item'));
+		if (!items.length) return;
+
+		const gap = Number(root.dataset.gap ?? 6);
+		const stagger = Number(root.dataset.stagger ?? 0.05);
+		const animateFrom = root.dataset.animateFrom ?? 'bottom';
+		const scaleOnHover = root.dataset.scaleOnHover === '1';
+		const hoverScale = Number(root.dataset.hoverScale ?? 0.96);
+		const blurToFocus = root.dataset.blurToFocus === '1';
+
+		// Breakpoints are based on the container's own width, not the viewport —
+		// this component is often placed in a column narrower than the page.
+		const getColumns = (width: number) => {
+			if (width >= 1100) return 4;
+			if (width >= 780) return 3;
+			if (width >= 440) return 2;
+			return 1;
+		};
+
+		const getInitialOffset = (item: { x: number; y: number; w: number; h: number }) => {
+			const rect = root.getBoundingClientRect();
+			let direction = animateFrom;
+			if (direction === 'random') {
+				const directions = ['top', 'bottom', 'left', 'right'];
+				direction = directions[Math.floor(Math.random() * directions.length)];
+			}
+			switch (direction) {
+				case 'top':
+					return { x: item.x, y: -200 };
+				case 'left':
+					return { x: -200, y: item.y };
+				case 'right':
+					return { x: rect.width + 200, y: item.y };
+				case 'center':
+					return { x: rect.width / 2 - item.w / 2, y: rect.height / 2 - item.h / 2 };
+				default:
+					return { x: item.x, y: item.y + 160 };
+			}
+		};
+
+		let mounted = false;
+		let imagesReady = false;
+
+		const layout = () => {
+			const width = root.getBoundingClientRect().width;
+			if (!width) return;
+
+			const columns = getColumns(width);
+			const colHeights = new Array(columns).fill(0);
+			const columnWidth = width / columns;
+
+			items.forEach((item, index) => {
+				const img = item.querySelector<HTMLImageElement>('.masonry__image');
+				const aspect = img && img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 1;
+				const col = colHeights.indexOf(Math.min(...colHeights));
+				const x = columnWidth * col;
+				const height = columnWidth / aspect;
+				const y = colHeights[col];
+				colHeights[col] += height;
+
+				item.style.width = `${columnWidth}px`;
+				item.style.height = `${height}px`;
+
+				if (!mounted) {
+					const offset = getInitialOffset({ x, y, w: columnWidth, h: height });
+					item.style.transitionDelay = `${index * stagger}s`;
+					item.style.transform = `translate3d(${offset.x}px, ${offset.y}px, 0)`;
+					item.style.opacity = '0';
+					if (blurToFocus) item.style.filter = 'blur(10px)';
+					requestAnimationFrame(() => {
+						requestAnimationFrame(() => {
+							item.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+							item.style.opacity = '1';
+							if (blurToFocus) item.style.filter = 'blur(0px)';
+						});
+					});
+				} else {
+					item.style.transitionDelay = '0s';
+					item.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+				}
+			});
+
+			root.style.height = `${Math.max(...colHeights, 0)}px`;
+			if (imagesReady) mounted = true;
+		};
+
+		const images = items.map((item) => item.querySelector<HTMLImageElement>('.masonry__image')).filter((img): img is HTMLImageElement => !!img);
+		let pending = images.length;
+		const onImageSettled = () => {
+			pending -= 1;
+			if (pending <= 0) {
+				imagesReady = true;
+				layout();
+			}
+		};
+		if (!images.length) {
+			imagesReady = true;
+		} else {
+			images.forEach((img) => {
+				if (img.complete) onImageSettled();
+				else {
+					img.addEventListener('load', onImageSettled, { once: true });
+					img.addEventListener('error', onImageSettled, { once: true });
+				}
+			});
+		}
+
+		layout();
+
+		const resizeObserver = new ResizeObserver(() => layout());
+		resizeObserver.observe(root);
+
+		if (scaleOnHover) {
+			items.forEach((item) => {
+				const content = item.querySelector<HTMLElement>('.masonry__content');
+				if (!content) return;
+				item.addEventListener('mouseenter', () => {
+					content.style.transform = `scale(${hoverScale})`;
+				});
+				item.addEventListener('mouseleave', () => {
+					content.style.transform = 'scale(1)';
+				});
+			});
+		}
+	}
+
+	document.querySelectorAll<HTMLElement>('.masonry').forEach(setupMasonry);
+</script>
+
+<style>
+	.masonry {
+		position: relative;
+		width: 100%;
+	}
+	.masonry__item {
+		position: absolute;
+		top: 0;
+		left: 0;
+		display: block;
+		padding: var(--masonry-gap);
+		box-sizing: border-box;
+		text-decoration: none;
+		color: #fff;
+		opacity: 0;
+		will-change: transform, opacity, filter;
+		transition:
+			transform var(--masonry-duration) var(--masonry-ease),
+			width var(--masonry-duration) var(--masonry-ease),
+			height var(--masonry-duration) var(--masonry-ease),
+			opacity 0.6s ease,
+			filter 0.6s ease;
+	}
+	.masonry__content {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+		border-radius: 10px;
+		background: color-mix(in srgb, currentColor 12%, transparent);
+		box-shadow: 0 10px 38px rgb(8 6 18 / 0.2);
+		transition: transform 0.3s ease;
+	}
+	.masonry__image {
+		position: absolute;
+		inset: 0;
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		user-select: none;
+	}
+	.masonry__overlay {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+	}
+	.masonry__title {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		padding: 1.1em;
+		font-weight: 600;
+		font-size: 0.95rem;
+		line-height: 1.2;
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+	}
+	.masonry__desc-stack {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		padding: 1.1em;
+		display: grid;
+		align-items: end;
+		font-weight: 400;
+	}
+	.masonry__desc-stack > p {
+		grid-area: 1 / 1;
+		transition: opacity 0.25s ease;
+	}
+	.masonry__description {
+		margin: 0;
+		font-size: 0.95rem;
+		line-height: 1.3;
+		opacity: 0.9;
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+	}
+	.masonry__description-long {
+		margin: 0;
+		font-size: 0.9rem;
+		line-height: 1.3;
+		opacity: 0;
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 4;
+	}
+	.masonry__item:hover:has(.masonry__description-long) .masonry__description {
+		opacity: 0;
+	}
+	.masonry__item:hover .masonry__description-long {
+		opacity: 1;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.masonry__item {
+			transition: none;
+		}
+	}
+</style>
