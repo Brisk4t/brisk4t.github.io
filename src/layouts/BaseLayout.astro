@@ -57,6 +57,10 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 	}
 	:root {
 		color-scheme: light dark;
+		/* Height of the SiteTerminal's collapsed titlebar, which stays fixed to the
+		   viewport bottom — the footer needs this much clearance so the terminal
+		   never occludes it. */
+		--terminal-bar-height: 2.1rem;
 	}
 	* {
 		box-sizing: border-box;
@@ -67,11 +71,15 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 	}
 	body {
 		margin: 0;
+		min-height: 100dvh;
+		display: flex;
+		flex-direction: column;
 		font-family: system-ui, sans-serif;
 		line-height: 1.5;
 		padding-left: 48px;
 	}
 	main {
+		flex: 1 0 auto;
 		max-width: 960px;
 		margin: 0 auto;
 		padding: 1rem 1.5rem 1.5rem;
@@ -79,12 +87,14 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 	@media (max-width: 640px) {
 		body {
 			padding-left: 0;
-			padding-bottom: calc(48px + env(safe-area-inset-bottom));
+			padding-bottom: calc(48px + env(safe-area-inset-bottom) + var(--terminal-bar-height));
 		}
 	}
 	footer {
+		flex-shrink: 0;
 		text-align: center;
 		padding: 1.25rem;
+		padding-bottom: calc(1.25rem + var(--terminal-bar-height));
 		opacity: 0.6;
 		font-size: 0.85rem;
 	}
