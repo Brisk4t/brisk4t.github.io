@@ -1,0 +1,415 @@
+---
+// Ported from https://reactbits.dev/components/infinite-spiral
+interface SpiralItem {
+	src: string;
+	alt?: string;
+	href?: string;
+	target?: string;
+	label?: string;
+	id?: string;
+	title?: string;
+	description?: string;
+	longDescription?: string;
+}
+
+interface Props {
+	items: (string | SpiralItem)[];
+	speed?: number;
+	direction?: 'up' | 'down';
+	animationMode?: 'auto' | 'scroll' | 'drag' | 'all';
+	radius?: number;
+	cardWidth?: number;
+	cardHeight?: number;
+	verticalSpacing?: number;
+	perspective?: number;
+	cardsPerTurn?: number;
+	rotation?: number;
+	cardTilt?: number;
+	cardRadius?: number;
+	centerScale?: number;
+	edgeFade?: number;
+	edgeBlur?: number;
+	pauseOnHover?: boolean;
+	imageFit?: 'cover' | 'contain';
+	grayscale?: number;
+	class?: string;
+}
+
+const {
+	items,
+	speed = 0.55,
+	direction = 'up',
+	animationMode = 'auto',
+	radius = 170,
+	cardWidth = 100,
+	cardHeight = 100,
+	verticalSpacing = 60,
+	perspective = 1000,
+	cardsPerTurn = 7,
+	rotation = 0,
+	cardTilt = 0,
+	cardRadius = 10,
+	centerScale = 1.2,
+	edgeFade = 0.3,
+	edgeBlur = 6,
+	pauseOnHover = true,
+	imageFit = 'cover',
+	grayscale = 0,
+	class: className = '',
+} = Astro.props;
+
+const normalizedItems: SpiralItem[] = items.map((item, index) =>
+	typeof item === 'string' ? { src: item, alt: `Spiral image ${index + 1}` } : { alt: `Spiral image ${index + 1}`, ...item },
+);
+
+const dragEnabled = animationMode === 'drag' || animationMode === 'all';
+---
+
+<div
+	class:list={['infinite-spiral', className]}
+	data-speed={speed}
+	data-direction={direction}
+	data-animation-mode={animationMode}
+	data-radius={radius}
+	data-card-width={cardWidth}
+	data-card-height={cardHeight}
+	data-vertical-spacing={verticalSpacing}
+	data-perspective={perspective}
+	data-cards-per-turn={cardsPerTurn}
+	data-rotation={rotation}
+	data-card-tilt={cardTilt}
+	data-center-scale={centerScale}
+	data-edge-fade={edgeFade}
+	data-edge-blur={edgeBlur}
+	data-pause-on-hover={pauseOnHover ? '1' : '0'}
+	style={{
+		perspective: `${perspective}px`,
+		'--infinite-spiral-card-width': `${cardWidth}px`,
+		'--infinite-spiral-card-height': `${cardHeight}px`,
+		'--infinite-spiral-card-radius': `${cardRadius}px`,
+		cursor: dragEnabled ? 'grab' : 'default',
+		touchAction: dragEnabled ? 'pan-x' : 'auto',
+		userSelect: dragEnabled ? 'none' : 'auto',
+	}}
+>
+	<div class="infinite-spiral__stage" role="list" aria-label="Infinite spiral gallery">
+		{
+			normalizedItems.map((item, index) => {
+				const Card = item.href ? 'a' : 'div';
+				return (
+					<Card
+						class="infinite-spiral__item"
+						style={{ width: `${cardWidth}px`, height: `${cardHeight}px`, borderRadius: `${cardRadius}px` }}
+						href={item.href}
+						target={item.target}
+						rel={item.target === '_blank' ? 'noreferrer' : undefined}
+						role="listitem"
+						aria-label={item.label ?? item.alt}
+						draggable={false}
+					>
+						<img
+							class="infinite-spiral__image"
+							src={item.src}
+							alt={item.alt}
+							loading={index < 6 ? 'eager' : 'lazy'}
+							draggable={false}
+							style={{ objectFit: imageFit, filter: `grayscale(${Math.min(1, Math.max(0, grayscale))})` }}
+						/>
+						<div class="infinite-spiral__overlay" />
+						{item.title && <span class="infinite-spiral__title">{item.title}</span>}
+						{(item.description || item.longDescription) && (
+							<div class="infinite-spiral__desc-stack">
+								{item.description && <p class="infinite-spiral__description">{item.description}</p>}
+								{item.longDescription && <p class="infinite-spiral__description-long">{item.longDescription}</p>}
+							</div>
+						)}
+					</Card>
+				);
+			})
+		}
+	</div>
+</div>
+
+<script>
+	const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+	const modulo = (value: number, divisor: number) => ((value % divisor) + divisor) % divisor;
+	const smoothstep = (min: number, max: number, value: number) => {
+		const x = clamp((value - min) / (max - min || 1), 0, 1);
+		return x * x * (3 - 2 * x);
+	};
+
+	function setupInfiniteSpiral(root: HTMLElement) {
+		const cards = Array.from(root.querySelectorAll<HTMLElement>('.infinite-spiral__item'));
+		const count = cards.length;
+		if (!count) return;
+
+		const speed = Number(root.dataset.speed ?? 0.55);
+		const direction = root.dataset.direction ?? 'up';
+		const animationMode = root.dataset.animationMode ?? 'auto';
+		const radius = Number(root.dataset.radius ?? 170);
+		const cardWidth = Number(root.dataset.cardWidth ?? 100);
+		const cardHeight = Number(root.dataset.cardHeight ?? 100);
+		const verticalSpacing = Number(root.dataset.verticalSpacing ?? 60);
+		const perspective = Number(root.dataset.perspective ?? 1000);
+		const cardsPerTurn = Number(root.dataset.cardsPerTurn ?? 7);
+		const rotation = Number(root.dataset.rotation ?? 0);
+		const cardTilt = Number(root.dataset.cardTilt ?? 0);
+		const centerScale = Number(root.dataset.centerScale ?? 1.2);
+		const edgeFade = Number(root.dataset.edgeFade ?? 0.3);
+		const edgeBlur = Number(root.dataset.edgeBlur ?? 6);
+		const pauseOnHover = root.dataset.pauseOnHover === '1';
+
+		let progress = 0;
+		let targetProgress = 0;
+		let autoSpeed = 0;
+		let hovered = false;
+		let visible = true;
+		let dragging = false;
+		let lastPointerY = 0;
+		let dragMoved = false;
+		let bounds = root.getBoundingClientRect();
+		let previousTime = performance.now();
+		let frameId = 0;
+
+		const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+		const scrollEnabled = animationMode === 'scroll' || animationMode === 'all';
+		const dragEnabled = animationMode === 'drag' || animationMode === 'all';
+		const scrollSpeedMultiplier = Math.max(speed, 0) / 0.55;
+		let lastScrollY = window.scrollY;
+
+		const resizeObserver = new ResizeObserver(() => {
+			bounds = root.getBoundingClientRect();
+		});
+		resizeObserver.observe(root);
+
+		const intersectionObserver = new IntersectionObserver(
+			([entry]) => {
+				visible = entry.isIntersecting;
+			},
+			{ threshold: 0.02 },
+		);
+		intersectionObserver.observe(root);
+
+		const handleScroll = () => {
+			const nextScrollY = window.scrollY;
+			const scrollDelta = nextScrollY - lastScrollY;
+			lastScrollY = nextScrollY;
+			if (!scrollEnabled || !visible || scrollDelta === 0) return;
+			targetProgress += clamp((scrollDelta * scrollSpeedMultiplier) / Math.max(verticalSpacing * 2, 1), -1.5, 1.5);
+		};
+		window.addEventListener('scroll', handleScroll, { passive: true });
+
+		const render = (time: number) => {
+			const delta = Math.min((time - previousTime) / 1000, 0.05);
+			previousTime = time;
+
+			const autoEnabled = animationMode === 'auto' || animationMode === 'all';
+			const motionPaused = dragging || (pauseOnHover && hovered);
+			const directionMultiplier = direction === 'down' ? -1 : 1;
+			const desiredAutoSpeed = autoEnabled && visible && !reducedMotion.matches && !motionPaused ? speed * directionMultiplier : 0;
+			const speedBlend = 1 - Math.exp(-delta * 7);
+			autoSpeed += (desiredAutoSpeed - autoSpeed) * speedBlend;
+			targetProgress += autoSpeed * delta;
+
+			const followBlend = 1 - Math.exp(-delta * (dragging ? 22 : 11));
+			progress += (targetProgress - progress) * followBlend;
+
+			const half = count / 2;
+			const width = Math.max(bounds.width, 1);
+			const height = Math.max(bounds.height, 1);
+			const fit = Math.min(1, width / (cardWidth * 2.8), height / (cardHeight * 2.35));
+			const responsiveRadius = Math.min(radius, Math.max(72, width * 0.36)) * fit;
+			const fadeStart = clamp(1 - edgeFade, 0, 0.98);
+			const turnSize = Math.max(cardsPerTurn, 1);
+
+			cards.forEach((card, index) => {
+				let offset = index - progress;
+				offset = modulo(offset + half, count) - half;
+
+				const edge = Math.min(Math.abs(offset) / Math.max(half, 1), 1);
+				const opacity = 1 - smoothstep(fadeStart, 1, edge);
+				const focus = 1 - Math.min(Math.abs(offset) / Math.max(turnSize * 0.65, 1), 1);
+				const scale = (1 + (centerScale - 1) * focus) * fit;
+				const angle = offset * (360 / turnSize) + rotation;
+				const angleRadians = (angle * Math.PI) / 180;
+				const x = Math.sin(angleRadians) * responsiveRadius;
+				const z = Math.cos(angleRadians) * responsiveRadius;
+				const depthScale = clamp(perspective / Math.max(perspective - z, 1), 0.72, 1.45);
+				const visualScale = scale * depthScale;
+				const depth = (z / Math.max(responsiveRadius, 1) + 1) / 2;
+				const blur = edgeBlur * smoothstep(0.35, 1, edge);
+				card.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${offset * verticalSpacing * fit}px, 0) rotateZ(${cardTilt}deg) scale(${visualScale})`;
+				card.style.opacity = opacity.toFixed(3);
+				card.style.filter = blur > 0.01 ? `blur(${blur.toFixed(2)}px)` : 'none';
+				card.style.zIndex = String(Math.round(depth * 100000) + index);
+				card.style.pointerEvents = opacity > 0.25 ? 'auto' : 'none';
+			});
+
+			frameId = requestAnimationFrame(render);
+		};
+
+		frameId = requestAnimationFrame(render);
+
+		root.addEventListener('mouseenter', () => {
+			hovered = true;
+		});
+		root.addEventListener('mouseleave', () => {
+			hovered = false;
+		});
+
+		root.addEventListener('dragstart', (event: DragEvent) => {
+			if (dragEnabled) event.preventDefault();
+		});
+
+		root.addEventListener('pointerdown', (event: PointerEvent) => {
+			if (!dragEnabled || event.button !== 0) return;
+			dragging = true;
+			dragMoved = false;
+			lastPointerY = event.clientY;
+			targetProgress = progress;
+			root.setPointerCapture(event.pointerId);
+			root.style.cursor = 'grabbing';
+		});
+
+		root.addEventListener('pointermove', (event: PointerEvent) => {
+			if (!dragging) return;
+			const pointerDelta = event.clientY - lastPointerY;
+			lastPointerY = event.clientY;
+			if (Math.abs(pointerDelta) > 0.5) dragMoved = true;
+			targetProgress -= pointerDelta / Math.max(verticalSpacing, 1);
+		});
+
+		const stopDragging = (event: PointerEvent) => {
+			if (!dragging) return;
+			dragging = false;
+			if (root.hasPointerCapture(event.pointerId)) {
+				root.releasePointerCapture(event.pointerId);
+			}
+			root.style.cursor = dragEnabled ? 'grab' : 'default';
+		};
+		root.addEventListener('pointerup', stopDragging);
+		root.addEventListener('pointercancel', stopDragging);
+
+		root.addEventListener(
+			'click',
+			(event) => {
+				if (!dragMoved) return;
+				event.preventDefault();
+				event.stopPropagation();
+				dragMoved = false;
+			},
+			{ capture: true },
+		);
+
+		window.addEventListener('beforeunload', () => cancelAnimationFrame(frameId));
+	}
+
+	document.querySelectorAll<HTMLElement>('.infinite-spiral').forEach(setupInfiniteSpiral);
+</script>
+
+<style>
+	.infinite-spiral {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		min-height: 320px;
+		overflow: hidden;
+		isolation: isolate;
+	}
+	.infinite-spiral__stage {
+		position: absolute;
+		inset: 0;
+		transform-style: preserve-3d;
+	}
+	.infinite-spiral__item {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		display: block;
+		width: var(--infinite-spiral-card-width);
+		height: var(--infinite-spiral-card-height);
+		overflow: hidden;
+		border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+		border-radius: var(--infinite-spiral-card-radius);
+		background: color-mix(in srgb, currentColor 12%, transparent);
+		box-shadow: 0 14px 38px rgb(8 6 18 / 0.2);
+		transform-style: preserve-3d;
+		backface-visibility: hidden;
+		will-change: transform, opacity, filter;
+		text-decoration: none;
+		color: #fff;
+	}
+	.infinite-spiral__image {
+		position: absolute;
+		inset: 0;
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-position: center;
+		user-select: none;
+	}
+	.infinite-spiral__overlay {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+	}
+	.infinite-spiral__title {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		padding: 0.6em;
+		font-weight: 600;
+		font-size: 0.95rem;
+		line-height: 1.2;
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+	}
+	.infinite-spiral__desc-stack {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		padding: 0.6em;
+		display: grid;
+		align-items: end;
+		font-weight: 400;
+	}
+	.infinite-spiral__desc-stack > p {
+		grid-area: 1 / 1;
+		transition: opacity 0.25s ease;
+	}
+	.infinite-spiral__description {
+		margin: 0;
+		font-size: 0.75rem;
+		line-height: 1.25;
+		opacity: 0.9;
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+	}
+	.infinite-spiral__description-long {
+		margin: 0;
+		font-size: 0.7rem;
+		line-height: 1.25;
+		opacity: 0;
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 4;
+	}
+	.infinite-spiral__item:hover:has(.infinite-spiral__description-long) .infinite-spiral__description {
+		opacity: 0;
+	}
+	.infinite-spiral__item:hover .infinite-spiral__description-long {
+		opacity: 1;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.infinite-spiral__item {
+			transition: none;
+		}
+	}
+</style>
