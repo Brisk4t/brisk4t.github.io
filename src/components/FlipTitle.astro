@@ -1,0 +1,230 @@
+---
+// Ported from https://ui.aceternity.com/components/text-flipping-board
+// Simplified to a single-row split-flap header that flips to `hoverText` on hover.
+interface Props {
+	text: string;
+	hoverText?: string;
+	href?: string;
+	target?: string;
+	align?: 'left' | 'right';
+	class?: string;
+}
+
+const { text, hoverText = 'See all', href, target, align = 'left', class: className = '' } = Astro.props;
+
+const columns = Math.max(text.length, hoverText.length);
+// Pad on one side only so both strings start at the same column —
+// otherwise centering each independently shifts "See all" out of
+// alignment with the title whenever the two lengths differ.
+const pad = (value: string) => {
+	const filler = ' '.repeat(columns - value.length);
+	return align === 'right' ? filler + value : value + filler;
+};
+
+const paddedText = pad(text).toUpperCase();
+const paddedHover = pad(hoverText).toUpperCase();
+const chars = paddedText.split('');
+---
+
+<a
+	class:list={['flip-title', className]}
+	href={href}
+	target={target}
+	rel={target === '_blank' ? 'noreferrer' : undefined}
+	aria-label={text}
+	data-text={paddedText}
+	data-hover-text={paddedHover}
+>
+	{chars.map((ch, i) => (
+		<span class="flip-cell" data-index={i} data-char={ch === ' ' ? ' ' : ch}>
+			<span class="flip-cell__half flip-cell__half--top">
+				<span class="flip-cell__glyph">{ch === ' ' ? ' ' : ch}</span>
+			</span>
+			<span class="flip-cell__half flip-cell__half--bottom">
+				<span class="flip-cell__glyph">{ch === ' ' ? ' ' : ch}</span>
+			</span>
+			<span class="flip-cell__flap">
+				<span class="flip-cell__glyph">&nbsp;</span>
+			</span>
+			<span class="flip-cell__hinge" aria-hidden="true" />
+		</span>
+	))}
+</a>
+
+<script>
+	const FLAP_CHARS = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$()-+&=;:\'",./?°';
+
+	function setupFlipTitle(root: HTMLElement) {
+		const cells = Array.from(root.querySelectorAll<HTMLElement>('.flip-cell'));
+		if (!cells.length) return;
+
+		const text = (root.dataset.text ?? '').split('');
+		const hoverText = (root.dataset.hoverText ?? '').split('');
+		const state = cells.map((cell) => cell.dataset.char === ' ' ? ' ' : (cell.dataset.char ?? ' '));
+
+		const showChar = (cell: HTMLElement, ch: string) => (ch === ' ' ? '\u00A0' : ch);
+
+		const ACCENTS = [
+			{ bg: '#dc2626', fg: '#fff' },
+			{ bg: '#ea580c', fg: '#fff' },
+			{ bg: '#facc15', fg: '#111' },
+			{ bg: '#16a34a', fg: '#fff' },
+			{ bg: '#2563eb', fg: '#fff' },
+			{ bg: '#7c3aed', fg: '#fff' },
+			{ bg: '#db2777', fg: '#fff' },
+		];
+
+		const applyAccent = (cell: HTMLElement, accent: { bg: string; fg: string } | null) => {
+			cell.querySelectorAll<HTMLElement>('.flip-cell__half, .flip-cell__flap').forEach((el) => {
+				el.style.background = accent?.bg ?? '';
+				el.style.color = accent?.fg ?? '';
+			});
+		};
+
+		const flipCell = (index: number, target: string, accent: { bg: string; fg: string } | null = null) => {
+			const cell = cells[index];
+			const current = state[index];
+			if (current === target) return;
+
+			const flap = cell.querySelector<HTMLElement>('.flip-cell__flap');
+			const flapGlyph = flap?.querySelector<HTMLElement>('.flip-cell__glyph');
+			const staticGlyphs = cell.querySelectorAll<HTMLElement>('.flip-cell__half .flip-cell__glyph');
+
+			if (flap && flapGlyph) {
+				flapGlyph.textContent = showChar(cell, current);
+				flap.style.transition = 'none';
+				flap.style.transform = 'rotateX(0deg)';
+				// Force reflow so the transition re-triggers on the next frame.
+				void flap.getBoundingClientRect();
+				applyAccent(cell, accent);
+				staticGlyphs.forEach((g) => (g.textContent = showChar(cell, target)));
+				requestAnimationFrame(() => {
+					flap.style.transition = '';
+					flap.style.transform = 'rotateX(-92deg)';
+				});
+			}
+
+			state[index] = target;
+		};
+
+		const runSequence = (target: string[], { scramble = false, stagger = 22 } = {}) => {
+			cells.forEach((_, i) => {
+				const finalChar = target[i] ?? ' ';
+				if (state[i] === finalChar) return;
+				const delay = i * stagger;
+				if (scramble) {
+					const randomChar = FLAP_CHARS[1 + Math.floor(Math.random() * (FLAP_CHARS.length - 1))];
+					const accent = Math.random() < 0.55 ? ACCENTS[Math.floor(Math.random() * ACCENTS.length)] : null;
+					setTimeout(() => flipCell(i, randomChar, accent), delay);
+					setTimeout(() => flipCell(i, finalChar, null), delay + 90);
+				} else {
+					setTimeout(() => flipCell(i, finalChar, null), delay);
+				}
+			});
+		};
+
+		// Entrance: flip in from blank to the title text.
+		cells.forEach((_, i) => (state[i] = ' '));
+		requestAnimationFrame(() => runSequence(text, { scramble: true, stagger: 26 }));
+
+		root.addEventListener('mouseenter', () => runSequence(hoverText, { scramble: true, stagger: 18 }));
+		root.addEventListener('mouseleave', () => runSequence(text, { scramble: true, stagger: 18 }));
+	}
+
+	document.querySelectorAll<HTMLElement>('.flip-title').forEach(setupFlipTitle);
+</script>
+
+<style>
+	.flip-title {
+		display: inline-flex;
+		gap: 2px;
+		padding: 0.5rem;
+		border: 2px solid transparent;
+		border-radius: 6px;
+		perspective: 400px;
+		text-decoration: none;
+		color: inherit;
+		cursor: pointer;
+		transition: border-color 0.2s ease;
+	}
+	.flip-title:hover {
+		border-color: currentColor;
+	}
+	.flip-cell {
+		position: relative;
+		width: 0.85em;
+		height: 1.2em;
+		font-size: 2.2rem;
+		border-radius: 3px;
+	}
+	.flip-cell__half {
+		position: absolute;
+		left: 0;
+		right: 0;
+		height: 50%;
+		overflow: hidden;
+		background: #111;
+		color: #fff;
+	}
+	.flip-cell__half--top {
+		top: 0;
+		border-radius: 3px 3px 0 0;
+	}
+	.flip-cell__half--bottom {
+		bottom: 0;
+		border-radius: 0 0 3px 3px;
+	}
+	.flip-cell__glyph {
+		position: absolute;
+		left: 0;
+		right: 0;
+		height: 200%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.68em;
+		font-weight: 700;
+		font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+		letter-spacing: 0;
+	}
+	.flip-cell__half--top .flip-cell__glyph {
+		top: 0;
+	}
+	.flip-cell__half--bottom .flip-cell__glyph {
+		bottom: 0;
+	}
+	.flip-cell__flap {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 0;
+		height: 50%;
+		overflow: hidden;
+		background: #111;
+		color: #fff;
+		border-radius: 3px 3px 0 0;
+		transform-origin: bottom;
+		transform: rotateX(-92deg);
+		backface-visibility: hidden;
+		transition: transform 0.32s cubic-bezier(0.55, 0.055, 0.675, 0.19);
+		z-index: 2;
+	}
+	.flip-cell__flap .flip-cell__glyph {
+		top: 0;
+	}
+	.flip-cell__hinge {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: calc(50% - 0.5px);
+		height: 1px;
+		background: rgba(0, 0, 0, 0.35);
+		z-index: 3;
+		pointer-events: none;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flip-cell__flap {
+			transition: none;
+		}
+	}
+</style>

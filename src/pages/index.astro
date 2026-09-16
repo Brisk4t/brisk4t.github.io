@@ -1,7 +1,9 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import HeroTile from '../components/HeroTile.astro';
 import AsciiText from '../components/AsciiText.astro';
+import MagnetLines from '../components/MagnetLines.astro';
+import Masonry from '../components/Masonry.astro';
+import FlipTitle from '../components/FlipTitle.astro';
 import { getCollection } from 'astro:content';
 
 const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
@@ -20,49 +22,65 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		</div>
 	</section>
 
-	<section>
-		<h2>Dev Blog</h2>
-		<ul class="grid">
-			{
-				posts.slice(0, 4).map((post) => (
-					<HeroTile
-						href={`/blog/${post.id}/`}
-						title={post.data.title}
-						description={post.data.description}
-						longDescription={post.data.longDescription}
-						heroImage={post.data.heroImage}
-						heroImageAlt={post.data.heroImageAlt}
-						date={post.data.pubDate}
-					/>
-				))
-			}
-		</ul>
-		<a href="/blog/">See all &rarr;</a>
-	</section>
+	<div class="split">
+		<section class="col-blog">
+			<div class="section-heading">
+				<FlipTitle text="Dev Blog" href="/blog/" align="right" />
+			</div>
+			{(() => {
+				const blogItems = posts.slice(0, 4).map((post) => ({
+					src: post.data.heroImage!,
+					alt: post.data.heroImageAlt,
+					href: `/blog/${post.id}/`,
+					label: post.data.title,
+					title: post.data.title,
+					description: post.data.description,
+					longDescription: post.data.longDescription,
+					date: post.data.pubDate,
+				}));
+				return <Masonry items={blogItems} titleFontSize="1.25rem" descriptionFontSize="1.125rem" descriptionLongFontSize="1rem" reverse />;
+			})()}
+		</section>
 
-	<section>
-		<h2>Scrapbooking With Code</h2>
-		<ul class="grid grid-titled">
-			{
-				labs.slice(0, 4).map((lab) => (
-					<HeroTile
-						href={lab.data.url ?? `/lab/${lab.data.slug}/`}
-						external={Boolean(lab.data.url)}
-						title={lab.data.title}
-						description={lab.data.description}
-						longDescription={lab.data.longDescription}
-						heroImage={lab.data.heroImage}
-						heroImageAlt={lab.data.heroImageAlt}
-						titleAbove
-					/>
-				))
-			}
-		</ul>
-		<a href="/lab/">See all &rarr;</a>
-	</section>
+		<section class="col-scrapbook">
+			<div class="section-heading">
+				<FlipTitle text="Scrapbook" href="/lab/" />
+			</div>
+			{(() => {
+				const masonryItems = labs
+					.filter((lab) => lab.data.heroImage)
+					.map((lab) => ({
+						src: lab.data.heroImage!,
+						alt: lab.data.heroImageAlt,
+						href: lab.data.url ?? `/lab/${lab.data.slug}/`,
+						target: lab.data.url ? '_blank' : undefined,
+						label: lab.data.title,
+						title: lab.data.title,
+						description: lab.data.description,
+						longDescription: lab.data.longDescription,
+					}));
+				return <Masonry items={masonryItems} />;
+			})()}
+		</section>
+	</div>
 </BaseLayout>
 
 <style>
+	:global(main) {
+		max-width: none;
+		margin: 0;
+		padding: 2rem 3rem 3rem;
+	}
+	.page-bg {
+		position: fixed;
+		inset: 0;
+		width: 100vw;
+		height: 100vh;
+		overflow: hidden;
+		opacity: 0.16;
+		pointer-events: none;
+		z-index: -1;
+	}
 	.hero {
 		display: flex;
 		flex-direction: column;
@@ -74,15 +92,32 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	.hero h3 {
 		margin: 0;
 	}
-	.grid {
-		list-style: none;
-		padding: 0;
-		margin-top: 2rem;
+	.split {
 		display: grid;
-		gap: 3rem 1rem;
-		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		grid-template-columns: 5fr 5fr;
+		gap: 0 2.5rem;
+		align-items: start;
+		margin-top: 2rem;
 	}
-	.grid-titled {
-		margin-top: 4rem;
+	.section-heading {
+		display: flex;
+		align-items: baseline;
+		justify-content: flex-start;
+		gap: 1rem;
+	}
+	.col-blog .section-heading {
+		justify-content: flex-end;
+	}
+	.split :global(.masonry) {
+		margin-top: 2rem;
+	}
+	@media (max-width: 800px) {
+		.split {
+			grid-template-columns: 1fr;
+			gap: 3rem 0;
+		}
+		.col-blog .section-heading {
+			justify-content: flex-start;
+		}
 	}
 </style>
