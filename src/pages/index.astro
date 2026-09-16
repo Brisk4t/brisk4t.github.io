@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import AsciiText from '../components/AsciiText.astro';
 import MagnetLines from '../components/MagnetLines.astro';
 import Masonry from '../components/Masonry.astro';
+import FlipTitle from '../components/FlipTitle.astro';
 import { getCollection } from 'astro:content';
 
 const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
@@ -27,7 +28,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	<div class="split">
 		<section class="col-blog">
 			<div class="section-heading">
-				<h1><a href="/blog/">Dev Blog</a></h1>
+				<FlipTitle text="Dev Blog" href="/blog/" align="right" />
 			</div>
 			{(() => {
 				const blogItems = posts.slice(0, 4).map((post) => ({
@@ -46,7 +47,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 
 		<section class="col-scrapbook">
 			<div class="section-heading">
-				<h1><a href="/lab/">Scrapbooking With Code</a></h1>
+				<FlipTitle text="Scrapbook" href="/lab/" />
 			</div>
 			{(() => {
 				const masonryItems = labs
@@ -109,17 +110,6 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	}
 	.col-blog .section-heading {
 		justify-content: flex-end;
-	}
-	.section-heading h1,
-	.section-heading h2 {
-		margin: 0;
-	}
-	.section-heading a {
-		color: inherit;
-		text-decoration: none;
-	}
-	.section-heading a:hover {
-		text-decoration: underline;
 	}
 	.split :global(.masonry) {
 		margin-top: 2rem;
