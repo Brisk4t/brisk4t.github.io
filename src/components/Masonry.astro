@@ -10,6 +10,7 @@ interface MasonryItem {
 	title?: string;
 	description?: string;
 	longDescription?: string;
+	date?: Date;
 }
 
 interface Props {
@@ -22,6 +23,10 @@ interface Props {
 	scaleOnHover?: boolean;
 	hoverScale?: number;
 	blurToFocus?: boolean;
+	titleFontSize?: string;
+	descriptionFontSize?: string;
+	descriptionLongFontSize?: string;
+	reverse?: boolean;
 	class?: string;
 }
 
@@ -35,6 +40,10 @@ const {
 	scaleOnHover = true,
 	hoverScale = 0.96,
 	blurToFocus = true,
+	titleFontSize = '0.95rem',
+	descriptionFontSize = '0.95rem',
+	descriptionLongFontSize = '0.9rem',
+	reverse = false,
 	class: className = '',
 } = Astro.props;
 
@@ -52,7 +61,15 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 	data-scale-on-hover={scaleOnHover ? '1' : '0'}
 	data-hover-scale={hoverScale}
 	data-blur-to-focus={blurToFocus ? '1' : '0'}
-	style={{ '--masonry-gap': `${gap}px`, '--masonry-duration': `${duration}s`, '--masonry-ease': ease }}
+	data-reverse={reverse ? '1' : '0'}
+	style={{
+		'--masonry-gap': `${gap}px`,
+		'--masonry-duration': `${duration}s`,
+		'--masonry-ease': ease,
+		'--masonry-title-size': titleFontSize,
+		'--masonry-desc-size': descriptionFontSize,
+		'--masonry-desc-long-size': descriptionLongFontSize,
+	}}
 >
 	{
 		normalizedItems.map((item, index) => {
@@ -67,6 +84,11 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 					rel={item.target === '_blank' ? 'noreferrer' : undefined}
 					aria-label={item.label ?? item.alt}
 				>
+					{item.date && (
+						<time class="masonry__date" datetime={item.date.toISOString()}>
+							{item.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+						</time>
+					)}
 					<div class="masonry__content">
 						<img class="masonry__image" src={item.src} alt={item.alt} loading={index < 6 ? 'eager' : 'lazy'} draggable={false} />
 						<div class="masonry__overlay" />
@@ -95,6 +117,7 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 		const scaleOnHover = root.dataset.scaleOnHover === '1';
 		const hoverScale = Number(root.dataset.hoverScale ?? 0.96);
 		const blurToFocus = root.dataset.blurToFocus === '1';
+		const reverse = root.dataset.reverse === '1';
 
 		// Breakpoints are based on the container's own width, not the viewport —
 		// this component is often placed in a column narrower than the page.
@@ -141,12 +164,15 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 				const img = item.querySelector<HTMLImageElement>('.masonry__image');
 				const aspect = img && img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 1;
 				const col = colHeights.indexOf(Math.min(...colHeights));
-				const x = columnWidth * col;
-				const height = columnWidth / aspect;
+				const x = reverse ? width - columnWidth * (col + 1) : columnWidth * col;
 				const y = colHeights[col];
-				colHeights[col] += height;
 
 				item.style.width = `${columnWidth}px`;
+				const dateEl = item.querySelector<HTMLElement>('.masonry__date');
+				const headerHeight = dateEl ? dateEl.getBoundingClientRect().height : 0;
+				const height = columnWidth / aspect + headerHeight;
+				colHeights[col] += height;
+
 				item.style.height = `${height}px`;
 
 				if (!mounted) {
@@ -224,11 +250,12 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 		position: absolute;
 		top: 0;
 		left: 0;
-		display: block;
+		display: flex;
+		flex-direction: column;
 		padding: var(--masonry-gap);
 		box-sizing: border-box;
 		text-decoration: none;
-		color: #fff;
+		color: inherit;
 		opacity: 0;
 		will-change: transform, opacity, filter;
 		transition:
@@ -240,12 +267,13 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 	}
 	.masonry__content {
 		position: relative;
-		width: 100%;
-		height: 100%;
+		flex: 1;
+		min-height: 0;
 		overflow: hidden;
 		border-radius: 10px;
 		background: color-mix(in srgb, currentColor 12%, transparent);
 		box-shadow: 0 10px 38px rgb(8 6 18 / 0.2);
+		color: #fff;
 		transition: transform 0.3s ease;
 	}
 	.masonry__image {
@@ -269,12 +297,20 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 		right: 0;
 		padding: 1.1em;
 		font-weight: 600;
-		font-size: 0.95rem;
+		font-size: var(--masonry-title-size);
 		line-height: 1.2;
 		overflow: hidden;
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
 		-webkit-line-clamp: 2;
+	}
+	.masonry__date {
+		align-self: flex-end;
+		flex-shrink: 0;
+		padding-bottom: 0.35em;
+		font-size: 0.75rem;
+		opacity: 0.7;
+		white-space: nowrap;
 	}
 	.masonry__desc-stack {
 		position: absolute;
@@ -292,7 +328,7 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 	}
 	.masonry__description {
 		margin: 0;
-		font-size: 0.95rem;
+		font-size: var(--masonry-desc-size);
 		line-height: 1.3;
 		opacity: 0.9;
 		overflow: hidden;
@@ -302,7 +338,7 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 	}
 	.masonry__description-long {
 		margin: 0;
-		font-size: 0.9rem;
+		font-size: var(--masonry-desc-long-size);
 		line-height: 1.3;
 		opacity: 0;
 		overflow: hidden;

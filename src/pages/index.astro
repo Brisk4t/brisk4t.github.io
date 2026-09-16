@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import HeroTile from '../components/HeroTile.astro';
 import AsciiText from '../components/AsciiText.astro';
 import MagnetLines from '../components/MagnetLines.astro';
 import Masonry from '../components/Masonry.astro';
@@ -28,30 +27,26 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	<div class="split">
 		<section class="col-blog">
 			<div class="section-heading">
-				<h1>Dev Blog</h1>
-				<a href="/blog/">See all &rarr;</a>
+				<h1><a href="/blog/">Dev Blog</a></h1>
 			</div>
-			<ul class="grid">
-				{
-					posts.slice(0, 4).map((post) => (
-						<HeroTile
-							href={`/blog/${post.id}/`}
-							title={post.data.title}
-							description={post.data.description}
-							longDescription={post.data.longDescription}
-							heroImage={post.data.heroImage}
-							heroImageAlt={post.data.heroImageAlt}
-							date={post.data.pubDate}
-						/>
-					))
-				}
-			</ul>
+			{(() => {
+				const blogItems = posts.slice(0, 4).map((post) => ({
+					src: post.data.heroImage!,
+					alt: post.data.heroImageAlt,
+					href: `/blog/${post.id}/`,
+					label: post.data.title,
+					title: post.data.title,
+					description: post.data.description,
+					longDescription: post.data.longDescription,
+					date: post.data.pubDate,
+				}));
+				return <Masonry items={blogItems} titleFontSize="1.25rem" descriptionFontSize="1.125rem" descriptionLongFontSize="1rem" reverse />;
+			})()}
 		</section>
 
 		<section class="col-scrapbook">
 			<div class="section-heading">
-				<h1>Scrapbooking With Code</h1>
-				<a href="/lab/">See all &rarr;</a>
+				<h1><a href="/lab/">Scrapbooking With Code</a></h1>
 			</div>
 			{(() => {
 				const masonryItems = labs
@@ -119,7 +114,14 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	.section-heading h2 {
 		margin: 0;
 	}
-	.col-scrapbook :global(.masonry) {
+	.section-heading a {
+		color: inherit;
+		text-decoration: none;
+	}
+	.section-heading a:hover {
+		text-decoration: underline;
+	}
+	.split :global(.masonry) {
 		margin-top: 2rem;
 	}
 	@media (max-width: 800px) {
@@ -130,14 +132,5 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		.col-blog .section-heading {
 			justify-content: flex-start;
 		}
-	}
-	.grid {
-		list-style: none;
-		padding: 0;
-		margin-top: 2rem;
-		display: grid;
-		justify-content: end;
-		gap: 2rem;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 300px));
 	}
 </style>
