@@ -2,7 +2,6 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroTile from '../components/HeroTile.astro';
 import AsciiText from '../components/AsciiText.astro';
-import MagnetLines from '../components/MagnetLines.astro';
 import { getCollection } from 'astro:content';
 
 const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
@@ -14,9 +13,6 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 ---
 
 <BaseLayout title="Home">
-	<div class="page-bg" aria-hidden="true">
-		<MagnetLines rows={10} columns={18} containerSize="100%" lineWidth="0.25vmin" lineHeight="3vmin" />
-	</div>
 	<section>
 		<div class="hero">
 			<AsciiText text="Brisk4t" enableWaves={false} />
@@ -67,16 +63,6 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 </BaseLayout>
 
 <style>
-	.page-bg {
-		position: fixed;
-		inset: 0;
-		width: 100vw;
-		height: 100vh;
-		overflow: hidden;
-		opacity: 0.16;
-		pointer-events: none;
-		z-index: -1;
-	}
 	.hero {
 		display: flex;
 		flex-direction: column;

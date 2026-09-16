@@ -2,6 +2,7 @@
 import SiteNav from '../components/SiteNav.astro';
 import DigitalClock from '../components/DigitalClock.astro';
 import SiteTerminal from '../components/SiteTerminal.astro';
+import MagnetLines from '../components/MagnetLines.astro';
 
 interface Props {
 	title: string;
@@ -24,6 +25,9 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 		<link href="https://fonts.googleapis.com/css2?family=Doto:wght@100..900&display=swap" rel="stylesheet" />
 	</head>
 	<body>
+		<div class="page-bg" aria-hidden="true">
+			<MagnetLines rows={10} columns={18} containerSize="100%" lineWidth="0.25vmin" lineHeight="3vmin" />
+		</div>
 		<SiteNav />
 		<div class="clock-fixed">
 			<DigitalClock />
@@ -94,6 +98,16 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 </style>
 
 <style>
+	.page-bg {
+		position: fixed;
+		inset: 0;
+		width: 100vw;
+		height: 100vh;
+		overflow: hidden;
+		opacity: 0.16;
+		pointer-events: none;
+		z-index: -1;
+	}
 	.clock-fixed {
 		position: fixed;
 		top: 4.5rem;

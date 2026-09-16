@@ -13,6 +13,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		{
 			posts.map((post) => (
 				<li>
+					<canvas class="pixel-canvas"></canvas>
 					<a href={`/blog/${post.id}/`}>
 						<div class="body">
 							<span class="title">{post.data.title}</span>
@@ -41,13 +42,57 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		list-style: none;
 		padding: 0;
 	}
+	@property --border-angle {
+		syntax: '<angle>';
+		initial-value: 0deg;
+		inherits: false;
+	}
 	.posts li {
+		position: relative;
 		margin-bottom: 1rem;
 		border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
 		border-radius: 0.75rem;
 		overflow: hidden;
+		background: light-dark(#ffffff, #1d1d1d);
+	}
+	.posts li::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: 3;
+		border-radius: inherit;
+		padding: 2px;
+		background: conic-gradient(from var(--border-angle), #7c3aed, #06b6d4, #ec4899, #7c3aed);
+		-webkit-mask:
+			linear-gradient(#fff 0 0) content-box,
+			linear-gradient(#fff 0 0);
+		-webkit-mask-composite: xor;
+		mask-composite: exclude;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.3s ease;
+	}
+	.posts li:hover::after {
+		opacity: 1;
+		animation: rotate-border-angle 3s linear infinite;
+	}
+	@keyframes rotate-border-angle {
+		to {
+			--border-angle: 360deg;
+		}
+	}
+	.pixel-canvas {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		width: 100%;
+		height: 100%;
+		opacity: 0.4;
+		pointer-events: none;
 	}
 	.posts li > a {
+		position: relative;
+		z-index: 2;
 		display: flex;
 		align-items: stretch;
 		gap: 1rem;
@@ -71,9 +116,6 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	.title {
 		font-size: 1.1rem;
 		font-weight: 600;
-	}
-	.posts li > a:hover .title {
-		text-decoration: underline;
 	}
 	time {
 		display: block;
@@ -107,3 +149,174 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		}
 	}
 </style>
+
+<script>
+	const GAP = 12;
+	const SPEED = 35;
+	const COLORS = ['#f8fafc', '#f1f5f9', '#cbd5e1'];
+	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	function getRandomValue(min: number, max: number) {
+		return Math.random() * (max - min) + min;
+	}
+
+	function getEffectiveSpeed(value: number) {
+		const min = 0;
+		const max = 100;
+		const throttle = 0.001;
+		if (value <= min || reducedMotion) return min;
+		if (value >= max) return max * throttle;
+		return value * throttle;
+	}
+
+	class Pixel {
+		ctx: CanvasRenderingContext2D;
+		x: number;
+		y: number;
+		color: string;
+		speed: number;
+		size = 0;
+		sizeStep = Math.random() * 0.4;
+		minSize = 0.5;
+		maxSizeInteger = 2;
+		maxSize: number;
+		delay: number;
+		counter = 0;
+		counterStep: number;
+		isIdle = false;
+		isReverse = false;
+		isShimmer = false;
+
+		constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, x: number, y: number, color: string, speed: number, delay: number) {
+			this.ctx = ctx;
+			this.x = x;
+			this.y = y;
+			this.color = color;
+			this.speed = getRandomValue(0.1, 0.9) * speed;
+			this.maxSize = getRandomValue(this.minSize, this.maxSizeInteger);
+			this.delay = delay;
+			this.counterStep = Math.random() * 4 + (canvas.width + canvas.height) * 0.01;
+		}
+
+		draw() {
+			const centerOffset = this.maxSizeInteger * 0.5 - this.size * 0.5;
+			this.ctx.fillStyle = this.color;
+			this.ctx.fillRect(this.x + centerOffset, this.y + centerOffset, this.size, this.size);
+		}
+
+		appear() {
+			this.isIdle = false;
+			if (this.counter <= this.delay) {
+				this.counter += this.counterStep;
+				return;
+			}
+			if (this.size >= this.maxSize) {
+				this.isShimmer = true;
+			}
+			if (this.isShimmer) {
+				this.shimmer();
+			} else {
+				this.size += this.sizeStep;
+			}
+			this.draw();
+		}
+
+		disappear() {
+			this.isShimmer = false;
+			this.counter = 0;
+			if (this.size <= 0) {
+				this.isIdle = true;
+				return;
+			}
+			this.size -= 0.1;
+			this.draw();
+		}
+
+		shimmer() {
+			if (this.size >= this.maxSize) {
+				this.isReverse = true;
+			} else if (this.size <= this.minSize) {
+				this.isReverse = false;
+			}
+			this.size += this.isReverse ? -this.speed : this.speed;
+		}
+	}
+
+	class PixelCard {
+		container: HTMLLIElement;
+		canvas: HTMLCanvasElement;
+		ctx: CanvasRenderingContext2D;
+		pixels: Pixel[] = [];
+		animationId = 0;
+		timePrevious = performance.now();
+
+		constructor(container: HTMLLIElement) {
+			this.container = container;
+			this.canvas = container.querySelector('.pixel-canvas') as HTMLCanvasElement;
+			this.ctx = this.canvas.getContext('2d')!;
+
+			this.initPixels();
+			new ResizeObserver(() => this.initPixels()).observe(container);
+
+			container.addEventListener('mouseenter', () => this.handleAnimation('appear'));
+			container.addEventListener('mouseleave', () => this.handleAnimation('disappear'));
+			container.addEventListener('focus', () => this.handleAnimation('appear'));
+			container.addEventListener('blur', () => this.handleAnimation('disappear'));
+		}
+
+		initPixels() {
+			const rect = this.container.getBoundingClientRect();
+			const width = Math.floor(rect.width);
+			const height = Math.floor(rect.height);
+
+			this.canvas.width = width;
+			this.canvas.height = height;
+
+			const body = this.container.querySelector('.body');
+			const bodyRect = body ? body.getBoundingClientRect() : rect;
+			const centerX = bodyRect.left - rect.left + bodyRect.width / 2;
+			const centerY = bodyRect.top - rect.top + bodyRect.height / 2;
+
+			const pxs: Pixel[] = [];
+			for (let x = 0; x < width; x += GAP) {
+				for (let y = 0; y < height; y += GAP) {
+					const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+					const dx = x - centerX;
+					const dy = y - centerY;
+					const distance = Math.sqrt(dx * dx + dy * dy);
+					const delay = reducedMotion ? 0 : distance;
+					pxs.push(new Pixel(this.canvas, this.ctx, x, y, color, getEffectiveSpeed(SPEED), delay));
+				}
+			}
+			this.pixels = pxs;
+		}
+
+		doAnimate(fnName: 'appear' | 'disappear') {
+			this.animationId = requestAnimationFrame(() => this.doAnimate(fnName));
+			const timeNow = performance.now();
+			const timePassed = timeNow - this.timePrevious;
+			const timeInterval = 1000 / 60;
+			if (timePassed < timeInterval) return;
+			this.timePrevious = timeNow - (timePassed % timeInterval);
+
+			this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+			let allIdle = true;
+			for (const pixel of this.pixels) {
+				pixel[fnName]();
+				if (!pixel.isIdle) allIdle = false;
+			}
+			if (allIdle) cancelAnimationFrame(this.animationId);
+		}
+
+		handleAnimation(name: 'appear' | 'disappear') {
+			cancelAnimationFrame(this.animationId);
+			this.animationId = requestAnimationFrame(() => this.doAnimate(name));
+		}
+	}
+
+	document.querySelectorAll<HTMLLIElement>('.posts > li').forEach((card) => {
+		card.tabIndex = 0;
+		new PixelCard(card);
+	});
+</script>
