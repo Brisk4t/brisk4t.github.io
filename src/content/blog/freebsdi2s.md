@@ -1,9 +1,9 @@
 ---
-title: FreeBSD
+title: FreeBSD I2S
 description: Writing a FreeBSD I2S Driver for the Raspberry Pi 
 longDescription: Writing a FreeBSD I2S Driver for the Raspberry Pi
 pubDate: 2026-09-07T12:30:00Z
-heroImage: https://www.toothpasteapp.com/ToothPaste_Cover_V2.png
+heroImage: https://upload.wikimedia.org/wikipedia/commons/0/0e/FreeBSD_13.0_boot_loader_autoboot_screenshot.png
 tags: [raspberry pi, FreeBSD, i2s]
 ---
 
