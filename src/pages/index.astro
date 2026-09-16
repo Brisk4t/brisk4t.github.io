@@ -119,8 +119,9 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 			grid-template-columns: 1fr;
 			gap: 3rem 0;
 		}
+		.section-heading,
 		.col-blog .section-heading {
-			justify-content: flex-start;
+			justify-content: center;
 		}
 	}
 </style>
