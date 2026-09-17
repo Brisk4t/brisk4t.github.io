@@ -1,0 +1,145 @@
+---
+// Ported from https://reactbits.dev/text-animations/decrypted-text
+// Simplified to a link header that decrypts to `hoverText` on hover, mirroring
+// FlipTitle's text/hoverText swap but with a scrambling reveal instead of a flip.
+interface Props {
+	text: string;
+	hoverText?: string;
+	href?: string;
+	target?: string;
+	align?: 'left' | 'right';
+	speed?: number;
+	characters?: string;
+	class?: string;
+}
+
+const {
+	text,
+	hoverText = 'See all',
+	href,
+	target,
+	align = 'left',
+	speed = 40,
+	characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*',
+	class: className = '',
+} = Astro.props;
+
+const columns = Math.max(text.length, hoverText.length);
+// Pad on one side only so both strings start at the same column — otherwise
+// centering each independently shifts "SEE ALL" out of alignment with the
+// title whenever the two lengths differ.
+const pad = (value: string) => {
+	const filler = ' '.repeat(columns - value.length);
+	return align === 'right' ? filler + value : value + filler;
+};
+
+const paddedText = pad(text).toUpperCase();
+const paddedHover = pad(hoverText).toUpperCase();
+const chars = paddedText.split('');
+---
+
+<a
+	class:list={['decrypted-title', className]}
+	href={href}
+	target={target}
+	rel={target === '_blank' ? 'noreferrer' : undefined}
+	aria-label={text}
+	data-text={paddedText}
+	data-hover-text={paddedHover}
+	data-speed={speed}
+	data-characters={characters}
+>
+	{chars.map((ch, i) => (
+		<span class="decrypted-char" data-index={i}>{ch === ' ' ? ' ' : ch}</span>
+	))}
+</a>
+
+<script>
+	function setupDecryptedText(root: HTMLElement) {
+		const cells = Array.from(root.querySelectorAll<HTMLElement>('.decrypted-char'));
+		if (!cells.length) return;
+
+		const text = (root.dataset.text ?? '').split('');
+		const hoverText = (root.dataset.hoverText ?? '').split('');
+		const speed = Number(root.dataset.speed ?? 40);
+		const characters = (root.dataset.characters ?? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*').split('');
+
+		const randomChar = () => characters[Math.floor(Math.random() * characters.length)];
+		const showChar = (ch: string) => (ch === ' ' ? ' ' : ch);
+
+		let intervalId: ReturnType<typeof setInterval> | null = null;
+
+		// A previous run's interval must be stopped before starting a new one —
+		// otherwise a quick hover in/out races two tickers against the same
+		// cells and neither ever finishes cleanly.
+		const runDecrypt = (target: string[]) => {
+			if (intervalId) clearInterval(intervalId);
+
+			const revealed = new Set<number>();
+			const order = Array.from({ length: cells.length }, (_, i) => i);
+
+			const render = () => {
+				cells.forEach((cell, i) => {
+					const finalChar = target[i] ?? ' ';
+					cell.classList.toggle('decrypted-char--revealed', revealed.has(i) || finalChar === ' ');
+					cell.textContent = revealed.has(i) || finalChar === ' ' ? showChar(finalChar) : randomChar();
+				});
+			};
+
+			let pointer = 0;
+			render();
+			intervalId = setInterval(() => {
+				if (pointer >= order.length) {
+					clearInterval(intervalId!);
+					intervalId = null;
+					return;
+				}
+				revealed.add(order[pointer]);
+				pointer++;
+				render();
+			}, speed);
+		};
+
+		requestAnimationFrame(() => runDecrypt(text));
+
+		root.addEventListener('mouseenter', () => runDecrypt(hoverText));
+		root.addEventListener('mouseleave', () => runDecrypt(text));
+	}
+
+	document.querySelectorAll<HTMLElement>('.decrypted-title').forEach(setupDecryptedText);
+</script>
+
+<style>
+	/* Sized to match FlipTitle's flip-cell grid: same 2.2rem cell context and
+	   0.85em cell width, so both headings share the same font, glyph size,
+	   and column rhythm even though this one isn't boxed. */
+	.decrypted-title {
+		display: inline-flex;
+		gap: 2px;
+		padding: 0.5rem;
+		border-bottom: 2px solid transparent;
+		text-decoration: none;
+		color: inherit;
+		cursor: pointer;
+		font-size: 2.2rem;
+		text-transform: uppercase;
+		transition: border-color 0.2s ease;
+	}
+	.decrypted-title:hover {
+		border-bottom-color: currentColor;
+	}
+	.decrypted-char {
+		display: inline-block;
+		width: 0.85em;
+		text-align: center;
+		font-size: 0.68em;
+		font-weight: 700;
+		font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+		letter-spacing: 0;
+		opacity: 0.4;
+		color: currentColor;
+	}
+	.decrypted-char--revealed {
+		opacity: 1;
+	}
+</style>

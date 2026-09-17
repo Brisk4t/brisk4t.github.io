@@ -168,8 +168,7 @@ const chars = paddedText.split('');
 		display: inline-flex;
 		gap: 2px;
 		padding: 0.5rem;
-		border: 2px solid transparent;
-		border-radius: 6px;
+		border-bottom: 2px solid transparent;
 		perspective: 400px;
 		text-decoration: none;
 		color: inherit;
@@ -177,7 +176,7 @@ const chars = paddedText.split('');
 		transition: border-color 0.2s ease;
 	}
 	.flip-title:hover {
-		border-color: currentColor;
+		border-bottom-color: currentColor;
 	}
 	.flip-cell {
 		position: relative;

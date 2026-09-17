@@ -4,6 +4,7 @@ import AsciiText from '../components/AsciiText.astro';
 import MagnetLines from '../components/MagnetLines.astro';
 import Masonry from '../components/Masonry.astro';
 import FlipTitle from '../components/FlipTitle.astro';
+import DecryptedText from '../components/DecryptedText.astro';
 import { getCollection } from 'astro:content';
 
 const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
@@ -25,7 +26,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	<div class="split">
 		<section class="col-blog">
 			<div class="section-heading">
-				<FlipTitle text="Dev Blog" href="/blog/" align="right" />
+				<DecryptedText text="Dev Blog" href="/blog/" align="right" />
 			</div>
 			{(() => {
 				const blogItems = posts.slice(0, 4).map((post) => ({
