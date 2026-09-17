@@ -7,10 +7,11 @@ interface Props {
 	href?: string;
 	target?: string;
 	align?: 'left' | 'right';
+	randomizeStartColors?: boolean;
 	class?: string;
 }
 
-const { text, hoverText = 'See all', href, target, align = 'left', class: className = '' } = Astro.props;
+const { text, hoverText = 'See all', href, target, align = 'left', randomizeStartColors = false, class: className = '' } = Astro.props;
 
 const columns = Math.max(text.length, hoverText.length);
 // Pad on one side only so both strings start at the same column —
@@ -34,6 +35,7 @@ const chars = paddedText.split('');
 	aria-label={text}
 	data-text={paddedText}
 	data-hover-text={paddedHover}
+	data-randomize-colors={randomizeStartColors ? '1' : '0'}
 >
 	{chars.map((ch, i) => (
 		<span class="flip-cell" data-index={i} data-char={ch === ' ' ? ' ' : ch}>
@@ -107,28 +109,55 @@ const chars = paddedText.split('');
 			state[index] = target;
 		};
 
-		const runSequence = (target: string[], { scramble = false, stagger = 22 } = {}) => {
+		// A previous sequence's still-pending timeouts race with a new one
+		// (e.g. the mouse enters and leaves before the hover-in flips finish),
+		// and whichever fires last for a cell wins — leaving some cells on the
+		// old target and some on the new one. Cancel anything still pending
+		// before scheduling a new sequence so a run always finishes cleanly.
+		let pendingTimeouts: ReturnType<typeof setTimeout>[] = [];
+
+		const runSequence = (target: string[], { scramble = false, stagger = 22, colorizeIndices = null }: { scramble?: boolean; stagger?: number; colorizeIndices?: Set<number> | null } = {}) => {
+			pendingTimeouts.forEach(clearTimeout);
+			pendingTimeouts = [];
+
 			cells.forEach((_, i) => {
 				const finalChar = target[i] ?? ' ';
 				if (state[i] === finalChar) return;
 				const delay = i * stagger;
+				const finalAccent = colorizeIndices?.has(i) ? ACCENTS[Math.floor(Math.random() * ACCENTS.length)] : null;
 				if (scramble) {
 					const randomChar = FLAP_CHARS[1 + Math.floor(Math.random() * (FLAP_CHARS.length - 1))];
 					const accent = Math.random() < 0.55 ? ACCENTS[Math.floor(Math.random() * ACCENTS.length)] : null;
-					setTimeout(() => flipCell(i, randomChar, accent), delay);
-					setTimeout(() => flipCell(i, finalChar, null), delay + 90);
+					pendingTimeouts.push(setTimeout(() => flipCell(i, randomChar, accent), delay));
+					pendingTimeouts.push(setTimeout(() => flipCell(i, finalChar, finalAccent), delay + 90));
 				} else {
-					setTimeout(() => flipCell(i, finalChar, null), delay);
+					pendingTimeouts.push(setTimeout(() => flipCell(i, finalChar, finalAccent), delay));
 				}
 			});
 		};
 
+		const randomizeStartColors = root.dataset.randomizeColors === '1';
+		const pickColorIndices = (target: string[]): Set<number> | null => {
+			if (!randomizeStartColors) return null;
+			const letterIndices = target.reduce<number[]>((acc, ch, i) => {
+				if (ch !== ' ') acc.push(i);
+				return acc;
+			}, []);
+			for (let i = letterIndices.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[letterIndices[i], letterIndices[j]] = [letterIndices[j], letterIndices[i]];
+			}
+			return new Set(letterIndices.slice(0, 3));
+		};
+
 		// Entrance: flip in from blank to the title text.
 		cells.forEach((_, i) => (state[i] = ' '));
-		requestAnimationFrame(() => runSequence(text, { scramble: true, stagger: 26 }));
+		requestAnimationFrame(() => runSequence(text, { scramble: true, stagger: 26, colorizeIndices: pickColorIndices(text) }));
 
 		root.addEventListener('mouseenter', () => runSequence(hoverText, { scramble: true, stagger: 18 }));
-		root.addEventListener('mouseleave', () => runSequence(text, { scramble: true, stagger: 18 }));
+		// Re-pick which 3 letters get colored each time the title settles back
+		// to its idle text, instead of reusing the same trio from mount.
+		root.addEventListener('mouseleave', () => runSequence(text, { scramble: true, stagger: 18, colorizeIndices: pickColorIndices(text) }));
 	}
 
 	document.querySelectorAll<HTMLElement>('.flip-title').forEach(setupFlipTitle);

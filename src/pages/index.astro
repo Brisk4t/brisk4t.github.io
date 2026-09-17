@@ -44,7 +44,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 
 		<section class="col-scrapbook">
 			<div class="section-heading">
-				<FlipTitle text="Scrapbook" href="/lab/" />
+				<FlipTitle text="Scrapbook" href="/lab/" randomizeStartColors />
 			</div>
 			{(() => {
 				const masonryItems = labs
