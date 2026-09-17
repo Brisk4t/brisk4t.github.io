@@ -194,7 +194,8 @@ void main() {
 					}
 					str += '\n';
 				}
-				this.pre.innerHTML = str;
+				// textContent avoids re-parsing the string as HTML on every frame.
+				this.pre.textContent = str;
 			}
 		}
 
@@ -287,6 +288,7 @@ void main() {
 		renderer!: THREE.WebGLRenderer;
 		filter!: AsciiFilter;
 		animationFrameId = 0;
+		paused = false;
 
 		constructor({ text, asciiFontSize, textFontSize, textColor, fillAmount, enableWaves }: CanvAsciiOptions, containerElem: HTMLElement, width: number, height: number) {
 			this.textString = text;
@@ -392,12 +394,28 @@ void main() {
 			this.animate();
 		}
 
+		pause() {
+			this.paused = true;
+		}
+
+		resume() {
+			this.paused = false;
+		}
+
 		animate() {
-			const animateFrame = () => {
+			// The getImageData + per-pixel-to-glyph conversion is the expensive
+			// part of every frame; the shimmer it's capturing doesn't need a full
+			// 60fps to read as smooth, so cap that work well below display refresh.
+			const targetInterval = 1000 / 30;
+			let lastRenderTime = 0;
+			const animateFrame = (time: number) => {
 				this.animationFrameId = requestAnimationFrame(animateFrame);
+				if (this.paused) return;
+				if (time - lastRenderTime < targetInterval) return;
+				lastRenderTime = time;
 				this.render();
 			};
-			animateFrame();
+			this.animationFrameId = requestAnimationFrame(animateFrame);
 		}
 
 		render() {
@@ -459,11 +477,35 @@ void main() {
 		let cancelled = false;
 		let intersectionObserver: IntersectionObserver | null = null;
 		let resizeObserver: ResizeObserver | null = null;
+		let visibilityObserver: IntersectionObserver | null = null;
+		let inViewport = true;
 
 		const createAndInit = async (w: number, h: number) => {
 			const next = new CanvAscii({ text, asciiFontSize, textFontSize, textColor, fillAmount, enableWaves }, container, w, h);
 			await next.init();
 			return next;
+		};
+
+		const syncPaused = () => {
+			if (!instance) return;
+			if (inViewport && !document.hidden) instance.resume();
+			else instance.pause();
+		};
+
+		// Rendering costs nothing to anyone once the hero has scrolled out of
+		// view or the tab is backgrounded, so stop doing it.
+		const onVisibilityChange = () => syncPaused();
+		document.addEventListener('visibilitychange', onVisibilityChange);
+
+		const startVisibilityObserver = () => {
+			visibilityObserver = new IntersectionObserver(
+				([entry]) => {
+					inViewport = entry.isIntersecting;
+					syncPaused();
+				},
+				{ threshold: 0 },
+			);
+			visibilityObserver.observe(container);
 		};
 
 		const setup = async () => {
@@ -482,6 +524,7 @@ void main() {
 								instance = await createAndInit(w, h);
 								if (!cancelled && instance) {
 									instance.load();
+									startVisibilityObserver();
 								}
 							}
 						}
@@ -495,6 +538,7 @@ void main() {
 			instance = await createAndInit(width, height);
 			if (!cancelled && instance) {
 				instance.load();
+				startVisibilityObserver();
 
 				resizeObserver = new ResizeObserver((entries) => {
 					if (!entries[0] || !instance) return;
@@ -511,7 +555,9 @@ void main() {
 
 		return () => {
 			cancelled = true;
+			document.removeEventListener('visibilitychange', onVisibilityChange);
 			intersectionObserver?.disconnect();
+			visibilityObserver?.disconnect();
 			resizeObserver?.disconnect();
 			instance?.dispose();
 			instance = null;

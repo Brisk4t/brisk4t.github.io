@@ -53,18 +53,35 @@ const items = Array.from({ length: total });
 	function setupMagnetLines(container: HTMLElement) {
 		const items = container.querySelectorAll<HTMLElement>('span');
 
-		const onPointerMove = (pointer: { x: number; y: number }) => {
-			items.forEach((item) => {
+		// Read all geometry first, then write all styles — interleaving the two
+		// per item would force a synchronous reflow before every read.
+		const applyPointer = (pointer: { x: number; y: number }) => {
+			const centers = Array.from(items, (item) => {
 				const rect = item.getBoundingClientRect();
-				const centerX = rect.x + rect.width / 2;
-				const centerY = rect.y + rect.height / 2;
+				return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+			});
 
-				const b = pointer.x - centerX;
-				const a = pointer.y - centerY;
+			items.forEach((item, i) => {
+				const center = centers[i];
+				const b = pointer.x - center.x;
+				const a = pointer.y - center.y;
 				const c = Math.sqrt(a * a + b * b) || 1;
-				const r = ((Math.acos(b / c) * 180) / Math.PI) * (pointer.y > centerY ? 1 : -1);
+				const r = ((Math.acos(b / c) * 180) / Math.PI) * (pointer.y > center.y ? 1 : -1);
 
 				item.style.setProperty('--rotate', `${r}deg`);
+			});
+		};
+
+		// pointermove can fire far more often than the display refreshes, so
+		// coalesce to at most one layout pass per animation frame.
+		let rafId = 0;
+		let latestPointer: { x: number; y: number } | null = null;
+		const onPointerMove = (pointer: { x: number; y: number }) => {
+			latestPointer = pointer;
+			if (rafId) return;
+			rafId = requestAnimationFrame(() => {
+				rafId = 0;
+				if (latestPointer) applyPointer(latestPointer);
 			});
 		};
 
@@ -73,7 +90,7 @@ const items = Array.from({ length: total });
 		if (items.length) {
 			const middleIndex = Math.floor(items.length / 2);
 			const rect = items[middleIndex].getBoundingClientRect();
-			onPointerMove({ x: rect.x, y: rect.y });
+			applyPointer({ x: rect.x, y: rect.y });
 		}
 	}
 
