@@ -7,6 +7,7 @@ heroImage: https://upload.wikimedia.org/wikipedia/commons/0/0e/FreeBSD_13.0_boot
 tags: [raspberry pi, FreeBSD, i2s]
 ---
 
+# TL;DR: https://reviews.freebsd.org/D57484
 
 # So..... Why?
 
@@ -36,6 +37,47 @@ For now I just needed to know 2 things:
 ### So guess what... I read the DOCS
 
 
-![BCM2711 Register Map](/blog/freebsdi2s/BCM2711Regmap.png)
+![BCM2711 Register Map](/blog/freebsdi2s/BCM2de711Regmap.png)
+
+
+So lets confirm that the kernel can see this register address.
+
+```bash
+$: ofwdump -a | grep i2s 
+    Node 0x4424: i2s
+Node 0x4a34: i2s@7e203000
+```
+
+Perfect, there's our i2s register at the exact address that the datasheet showed us.
+So lets write a quick device tree to enable allow us to attach to it. 
 
 ```ofwdump -pr /soc/i2s@7e203000``` reveals all....
+
+```bash
+Node 0x4a34: i2s@7e203000
+  interrupts:
+    00 00 00 00 00 00 00 77 00 00 00 04 
+  compatible:
+    62 72 63 6d 2c 62 63 6d 32 38 33 35 2d 69 32 73 00 
+    'brcm,bcm2835-i2s'
+  reg:
+    7e 20 30 00 00 00 00 24 
+  clocks:
+    00 00 00 08 00 00 00 1f 
+  status:
+    6f 6b 61 79 00 
+    'okay'
+  #sound-dai-cells:
+    00 00 00 00 
+  dmas:
+    00 00 00 0c 00 00 00 02 00 00 00 0c 00 00 00 03 
+  dma-names:
+    74 78 00 72 78 00 
+  pinctrl-names:
+    64 65 66 61 75 6c 74 00 
+    'default'
+  pinctrl-0:
+    00 00 00 0d 
+  phandle:
+    00 00 00 33 
+```
