@@ -5,6 +5,8 @@ longDescription: Writing a FreeBSD I2S Driver for the Raspberry Pi
 pubDate: 2026-09-07T12:30:00Z
 heroImage: https://upload.wikimedia.org/wikipedia/commons/0/0e/FreeBSD_13.0_boot_loader_autoboot_screenshot.png
 tags: [raspberry pi, FreeBSD, i2s]
+links:
+  - {label: FreeBSD Phabricator PR, url: https://reviews.freebsd.org/D57484}
 ---
 
 # TL;DR: https://reviews.freebsd.org/D57484
@@ -37,7 +39,7 @@ For now I just needed to know 2 things:
 ### So guess what... I read the DOCS
 
 
-![BCM2711 Register Map](/blog/freebsdi2s/BCM2de711Regmap.png)
+![BCM2711 Register Map](/blog/freebsdi2s/BCM2711Regmap.png)
 
 
 So lets confirm that the kernel can see this register address.

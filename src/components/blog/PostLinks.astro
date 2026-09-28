@@ -4,12 +4,37 @@
  *
  * Usage (from a page):   <PostLinks links={post.data.links} />
  */
+import { resolveFavicon, type Favicon } from '../../lib/favicon';
+
+interface Link {
+	label: string;
+	url: string;
+	/** Image URL/path to use as the icon, or `false` for none. Defaults to the target site's favicon. */
+	icon?: string | false;
+	/** Optional dark-mode variant of the icon. */
+	iconDark?: string;
+}
+
 interface Props {
-	links: { label: string; url: string }[];
+	links: Link[];
 }
 
 const { links } = Astro.props;
 const isExternal = (url: string) => /^https?:\/\//.test(url);
+
+async function iconFor(link: Link): Promise<Favicon | undefined> {
+	if (link.icon === false) return undefined;
+	if (link.icon) return { light: link.icon, dark: link.iconDark };
+	if (!isExternal(link.url)) return { light: '/favicon.svg', dark: link.iconDark };
+	try {
+		const icon = await resolveFavicon(link.url);
+		return link.iconDark ? { ...icon, dark: link.iconDark } : icon;
+	} catch {
+		return undefined;
+	}
+}
+
+const icons = await Promise.all(links.map(iconFor));
 ---
 
 {
@@ -17,17 +42,37 @@ const isExternal = (url: string) => /^https?:\/\//.test(url);
 		<aside class="post-links" aria-label="Links">
 			<p class="post-links-title">Links</p>
 			<ul>
-				{links.map((link) => (
-					<li>
-						<a
-							href={link.url}
-							{...(isExternal(link.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-						>
-							{link.label}
-							{isExternal(link.url) && <span class="post-links-ext" aria-hidden="true">↗</span>}
-						</a>
-					</li>
-				))}
+				{links.map((link, i) => {
+					const icon = icons[i];
+					return (
+						<li>
+							<a
+								href={link.url}
+								{...(isExternal(link.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+							>
+								{icon && (
+									<picture class="post-links-picture">
+										{icon.dark && <source media="(prefers-color-scheme: dark)" srcset={icon.dark} />}
+										<img
+											class="post-links-icon"
+											src={icon.light}
+											alt=""
+											width="16"
+											height="16"
+											loading="lazy"
+											decoding="async"
+											onerror="this.style.visibility='hidden'"
+										/>
+									</picture>
+								)}
+								<span class="post-links-label">
+									{link.label}
+									{isExternal(link.url) && <span class="post-links-ext" aria-hidden="true">↗</span>}
+								</span>
+							</a>
+						</li>
+					);
+				})}
 			</ul>
 		</aside>
 	)
@@ -45,7 +90,7 @@ const isExternal = (url: string) => /^https?:\/\//.test(url);
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		font-size: 1rem;
+		font-size: 0.85rem;
 		opacity: 0.6;
 	}
 	.post-links ul {
@@ -54,11 +99,13 @@ const isExternal = (url: string) => /^https?:\/\//.test(url);
 		padding: 0;
 	}
 	.post-links li {
-		margin: 0.15rem 0;
+		margin: 0.4rem 0;
 	}
 	.post-links a {
-		display: block;
-		padding: 0.15rem 0.25rem;
+		display: flex;
+		align-items: flex-start;
+		gap: 0.45rem;
+		padding: 0.25rem 0;
 		text-decoration: none;
 		color: inherit;
 		opacity: 0.7;
@@ -68,6 +115,28 @@ const isExternal = (url: string) => /^https?:\/\//.test(url);
 	.post-links a:hover {
 		opacity: 1;
 		background: color-mix(in srgb, currentColor 8%, transparent);
+	}
+	/* Fixed-size slot so every favicon occupies the same box regardless of its intrinsic size/aspect. */
+	.post-links-picture {
+		flex: none;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1rem;
+		height: 1rem;
+		/* Nudge down so the icon centres on the first line of a wrapped label. */
+		margin-top: 0.1rem;
+		overflow: hidden;
+	}
+	.post-links-icon {
+		display: block;
+		width: 100%;
+		height: 100%;
+		border-radius: 3px;
+		object-fit: contain;
+	}
+	.post-links-label {
+		min-width: 0;
 	}
 	.post-links-ext {
 		margin-left: 0.25rem;

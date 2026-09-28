@@ -18,8 +18,17 @@ const blog = defineCollection({
 		// Useful links shown in the "Links" menu under the table of contents, e.g.
 		// links:
 		//   - { label: GitHub repo, url: https://github.com/... }
+		// Each link shows the site's favicon by default; set `icon` to an image URL/path to override, or `false` to hide it.
 		links: z
-			.array(z.object({ label: z.string(), url: z.string() }))
+			.array(
+				z.object({
+					label: z.string(),
+					url: z.string(),
+					icon: z.union([z.string(), z.literal(false)]).optional(),
+					// Dark-mode variant of the icon (auto-detected for most sites; set this if detection misses).
+					iconDark: z.string().optional(),
+				}),
+			)
 			.nullish()
 			.transform((v) => v ?? []),
 		draft: z.boolean().default(false),

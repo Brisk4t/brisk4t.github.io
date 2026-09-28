@@ -6,6 +6,9 @@ longDescription: Quickly control any device over WEB-BLE to paste passwords, use
 pubDate: 2026-08-20T12:30:00Z
 heroImage: https://www.toothpasteapp.com/ToothPaste_Cover_V2.png
 tags: [cryptography, esp32, ble]
+links:
+  - {label: ToothPaste Github, url: https://github.com/Brisk4t/ToothPaste}
+  - {label: ToothPaste WebApp, url: https://www.toothpasteapp.com/}
 ---
 
 > If only i could copy this really long password to this really shady computer, we could achieve world peace. Alas! I'm going to type it manually......
