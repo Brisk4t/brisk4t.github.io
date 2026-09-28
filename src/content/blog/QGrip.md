@@ -8,6 +8,7 @@ tags: [CNN, AI, Bionics, Arduino UNO Q, RTOS]
 links:
     - { label: QGrip Github, url: https://github.com/ShriramRaghu-UofA/QGrip}
     - { label: Uno Q USB, url: https://github.com/Brisk4t/Uno-Q-USB}
+    - { label: Shri's Blog, url: https://stpr-dev.github.io/}
 ---
 
 
