@@ -1,123 +1,51 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Masonry from '../../components/shared/Masonry.astro';
+import FlipTitle from '../../components/effects/FlipTitle.astro';
 import { getCollection } from 'astro:content';
 
 const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
+
+const items = labs.map((lab) => ({
+	src: lab.data.heroImage,
+	alt: lab.data.heroImageAlt,
+	accent: lab.data.accent,
+	href: lab.data.url ?? `/lab/${lab.data.slug}/`,
+	target: lab.data.url ? '_blank' : undefined,
+	label: lab.data.title,
+	title: lab.data.title,
+	description: lab.data.description,
+	longDescription: lab.data.longDescription,
+	tags: lab.data.tags,
+}));
 ---
 
 <BaseLayout title="Lab" description="A scrapbook of self-contained UI experiments.">
-	<h1>Lab</h1>
-	<p>Every piece here is a self-contained page &mdash; its own styling, sometimes its own framework. Adding a new one is a folder plus a registry entry; nothing here has to be touched.</p>
+	<h1 class="page-heading">
+		<FlipTitle text="Scrapbook" hoverText="Lab" randomizeStartColors />
+	</h1>
+	<p class="intro">Every piece here is a self-contained page &mdash; its own styling, sometimes its own framework. Feel free to look around, don't be surprised if you get teleported to a different world (not always a better one :3)</p>
 
-	<ul class="cards">
-		{
-			labs.map((lab) => (
-				<li style={`--accent: ${lab.data.accent}`}>
-					<span class="title">{lab.data.title}</span>
-					<a
-						href={lab.data.url ?? `/lab/${lab.data.slug}/`}
-						target={lab.data.url ? '_blank' : undefined}
-						rel={lab.data.url ? 'noopener noreferrer' : undefined}
-					>
-						{lab.data.heroImage && (
-							<img class="thumb" src={lab.data.heroImage} alt={lab.data.heroImageAlt ?? ''} loading="lazy" />
-						)}
-						<div class="overlay" />
-						<div class="body">
-							<p>{lab.data.description}</p>
-							<ul class="tags">
-								{lab.data.tags.map((tag) => (
-									<li>{tag}</li>
-								))}
-							</ul>
-						</div>
-					</a>
-				</li>
-			))
-		}
-	</ul>
+	<Masonry items={items} />
 </BaseLayout>
 
 <style>
-	.cards {
-		list-style: none;
-		padding: 0;
-		margin-top: 4rem;
-		display: grid;
-		gap: 3.25rem 1rem;
-		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-	}
-	.cards li {
-		position: relative;
-		border: 1px solid var(--accent, #6366f1);
-		border-radius: 0.75rem;
-		background: var(--accent, #6366f1);
-		transition: box-shadow 0.2s ease;
-	}
-	.cards li:hover {
-		box-shadow: 0 0 1.5rem 0.25rem color-mix(in srgb, var(--accent, #6366f1) 45%, transparent);
-	}
-	.cards a {
-		position: relative;
-		display: block;
-		min-height: 12rem;
-		color: #fff;
-		text-decoration: none;
-		overflow: hidden;
-		border-radius: inherit;
-	}
-	.thumb {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-	.overlay {
-		position: absolute;
-		inset: 0;
-		background: rgba(0, 0, 0, 0.5);
-	}
-	.body {
-		position: absolute;
-		inset: 1rem;
-	}
-	.cards .title {
-		position: absolute;
-		bottom: calc(100% + 1px);
-		font-size: 0.85rem;
-		font-weight: 500;
-		color: #dbdada;
-		left: 7px;
+	/* Full-width like the home page, instead of the layout's 960px column. */
+	:global(main) {
+		max-width: none;
 		margin: 0;
-		padding: 0.25rem 0.75rem;
-		background: Canvas;
-		border: 1px solid var(--accent, #6366f1);
-		border-bottom: none;
-		border-radius: 0.5rem 0.5rem 0 0;
-		transition: box-shadow 0.2s ease;
+		padding: 2rem 3rem 3rem;
 	}
-	.cards li:hover .title {
-		text-decoration: none;
-		box-shadow: 0 0 1.5rem 0.25rem color-mix(in srgb, var(--accent, #6366f1) 45%, transparent);
+	.page-heading {
+		margin: 0 0 1rem;
 	}
-	.tags {
-		position: absolute;
-		left: 0;
-		bottom: 0;
-		display: flex;
-		gap: 0.4rem;
-		list-style: none;
-		padding: 0;
-		margin: 0;
-		font-size: 0.75rem;
-		opacity: 0.85;
+	.intro {
+		font-size: 1.25rem;
+		line-height: 1.5;
 	}
-	.tags li {
-		border: 1px solid currentColor;
-		border-radius: 999px;
-		padding: 0.1rem 0.5rem;
+	:global(.masonry) {
+		margin-top: 2rem;
 	}
 </style>

@@ -1,8 +1,13 @@
 ---
 // Ported from https://reactbits.dev/components/masonry
 interface MasonryItem {
-	src: string;
+	/** Omit for a solid tile (uses `accent` as the background, square aspect). */
+	src?: string;
 	alt?: string;
+	/** Background colour for tiles without an image. */
+	accent?: string;
+	/** Pills shown along the bottom of the tile. */
+	tags?: string[];
 	href?: string;
 	target?: string;
 	label?: string;
@@ -89,14 +94,23 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 							{item.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
 						</time>
 					)}
-					<div class="masonry__content">
-						<img class="masonry__image" src={item.src} alt={item.alt} loading={index < 6 ? 'eager' : 'lazy'} draggable={false} />
+					<div class="masonry__content" style={item.accent ? { background: item.accent } : undefined}>
+						{item.src && (
+							<img class="masonry__image" src={item.src} alt={item.alt} loading={index < 6 ? 'eager' : 'lazy'} draggable={false} />
+						)}
 						<div class="masonry__overlay" />
 						{item.title && <span class="masonry__title">{item.title}</span>}
-						{(item.description || item.longDescription) && (
+						{(item.description || item.longDescription || item.tags?.length) && (
 							<div class="masonry__desc-stack">
 								{item.description && <p class="masonry__description">{item.description}</p>}
 								{item.longDescription && <p class="masonry__description-long">{item.longDescription}</p>}
+								{item.tags && item.tags.length > 0 && (
+									<ul class="masonry__tags">
+										{item.tags.map((tag) => (
+											<li>{tag}</li>
+										))}
+									</ul>
+								)}
 							</div>
 						)}
 					</div>
@@ -325,6 +339,23 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 	.masonry__desc-stack > p {
 		grid-area: 1 / 1;
 		transition: opacity 0.25s ease;
+	}
+	.masonry__tags {
+		grid-area: 2 / 1;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		list-style: none;
+		padding: 0;
+		margin: 0.6em 0 0;
+		font-size: 0.75rem;
+		opacity: 0.85;
+	}
+	.masonry__tags li {
+		border: 1px solid currentColor;
+		border-radius: 999px;
+		padding: 0.1rem 0.5rem;
+		line-height: 1.3;
 	}
 	.masonry__description {
 		margin: 0;
