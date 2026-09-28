@@ -15,6 +15,13 @@ const blog = defineCollection({
 		// Path into public/, e.g. /blog/my-post/cover.jpg. Omit for a text-only tile.
 		heroImage: z.string().optional(),
 		heroImageAlt: z.string().optional(),
+		// Useful links shown in the "Links" menu under the table of contents, e.g.
+		// links:
+		//   - { label: GitHub repo, url: https://github.com/... }
+		links: z
+			.array(z.object({ label: z.string(), url: z.string() }))
+			.nullish()
+			.transform((v) => v ?? []),
 		draft: z.boolean().default(false),
 	}),
 });

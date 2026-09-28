@@ -82,29 +82,16 @@ const tree = items ?? buildTree((headings ?? []).filter((h) => h.slug && h.text)
 		font-size: 0.85rem;
 		line-height: 1.4;
 	}
-	/* Inline above the article by default (narrow / mid screens). */
+	/* Inline above the article; the page's .post-sidebar docks it left on wide screens. */
 	.toc {
 		margin: 0 0 1.5rem;
-	}
-	/* Wide screens with room beside the 960px article: dock it to the left. */
-	@media (min-width: 1500px) {
-		.toc {
-			position: fixed;
-			top: 6rem;
-			left: calc((100vw - 960px) / 2 - 16rem);
-			width: 15rem;
-			max-height: calc(100vh - 8rem);
-			overflow-y: auto;
-			padding-right: 0.75rem;
-			margin: 0;
-		}
 	}
 	.toc-title {
 		margin: 0 0 0.5rem;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		font-size: 0.7rem;
+		font-size: 1rem;
 		opacity: 0.6;
 	}
 	.toc-list {

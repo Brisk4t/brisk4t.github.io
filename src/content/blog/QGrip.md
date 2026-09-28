@@ -5,6 +5,9 @@ longDescription: Developing a myoelectric controlled AI bionic hand for advanced
 pubDate: 2026-09-28T12:30:00Z
 heroImage: https://hackster.imgix.net/uploads/attachments/1990991/qgripcompressed_A2wWmnzTvg.gif
 tags: [CNN, AI, Bionics, Arduino UNO Q, RTOS]
+links:
+    - { label: QGrip Github, url: https://github.com/ShriramRaghu-UofA/QGrip}
+    - { label: Uno Q USB, url: https://github.com/Brisk4t/Uno-Q-USB}
 ---
 
 
