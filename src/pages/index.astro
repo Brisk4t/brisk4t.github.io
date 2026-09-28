@@ -1,10 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import AsciiText from '../components/AsciiText.astro';
-import MagnetLines from '../components/MagnetLines.astro';
-import Masonry from '../components/Masonry.astro';
-import FlipTitle from '../components/FlipTitle.astro';
-import DecryptedText from '../components/DecryptedText.astro';
+import AsciiText from '../components/effects/AsciiText.astro';
+import MagnetLines from '../components/effects/MagnetLines.astro';
+import Masonry from '../components/home/Masonry.astro';
+import FlipTitle from '../components/effects/FlipTitle.astro';
+import DecryptedText from '../components/effects/DecryptedText.astro';
 import { getCollection } from 'astro:content';
 
 const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
