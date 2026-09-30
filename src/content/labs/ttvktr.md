@@ -7,6 +7,6 @@ tags: [IR, rp2040, USB]
 slug: ttvktr
 url: https://brisk4t.github.io/TossedTheTVKeptTheRemote/
 accent: "#e0b45c"
-heroImage: https://raw.githubusercontent.com/Brisk4t/TossedTheTVKeptTheRemote/main/images/ttvktrcoveredit.png
+heroImage: https://github.com/Brisk4t/TossedTheTVKeptTheRemote/raw/main/images/app.png
 heroImageAlt: TTVKTR app about page preview
 ---
