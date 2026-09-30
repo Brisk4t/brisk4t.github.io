@@ -31,6 +31,8 @@ const blog = defineCollection({
 			)
 			.nullish()
 			.transform((v) => v ?? []),
+		// Pinned entries always show at the top of the masonry grid (newest pinned first), with a pin badge.
+		pinned: z.boolean().default(false),
 		draft: z.boolean().default(false),
 	}),
 });
@@ -54,6 +56,8 @@ const labs = defineCollection({
 		// Path into public/, e.g. /lab/my-lab/cover.svg. Omit for a solid accent-colored tile.
 		heroImage: z.string().optional(),
 		heroImageAlt: z.string().optional(),
+		// Pinned entries always show at the top of the masonry grid (newest pinned first), with a pin badge.
+		pinned: z.boolean().default(false),
 		draft: z.boolean().default(false),
 	}),
 });

@@ -9,6 +9,7 @@ tags: [cryptography, esp32, ble]
 links:
   - {label: ToothPaste Github, url: https://github.com/Brisk4t/ToothPaste}
   - {label: ToothPaste WebApp, url: https://www.toothpasteapp.com/}
+pinned: true
 ---
 
 > If only i could copy this really long password to this really shady computer, we could achieve world peace. Alas! I'm going to type it manually......

@@ -3,10 +3,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Masonry from '../../components/shared/Masonry.astro';
 import FlipTitle from '../../components/effects/FlipTitle.astro';
 import { getCollection } from 'astro:content';
+import { sortPinnedFirst } from '../../lib/sort';
 
-const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const labs = sortPinnedFirst(await getCollection('labs', ({ data }) => !data.draft));
 
 const items = labs.map((lab) => ({
 	src: lab.data.heroImage,
@@ -19,6 +18,7 @@ const items = labs.map((lab) => ({
 	description: lab.data.description,
 	longDescription: lab.data.longDescription,
 	tags: lab.data.tags,
+	pinned: lab.data.pinned,
 }));
 ---
 

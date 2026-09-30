@@ -6,13 +6,13 @@ import Masonry from '../components/shared/Masonry.astro';
 import FlipTitle from '../components/effects/FlipTitle.astro';
 import DecryptedText from '../components/effects/DecryptedText.astro';
 import { getCollection } from 'astro:content';
+import { sortPinnedFirst } from '../lib/sort';
 
-const labs = (await getCollection('labs', ({ data }) => !data.draft)).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
-const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const labs = sortPinnedFirst(await getCollection('labs', ({ data }) => !data.draft));
+const posts = sortPinnedFirst(await getCollection('blog', ({ data }) => !data.draft));
+// Pinned posts always show; the remaining slots go to the latest unpinned posts.
+const pinnedPosts = posts.filter((p) => p.data.pinned);
+const homePosts = [...pinnedPosts, ...posts.filter((p) => !p.data.pinned).slice(0, Math.max(0, 4 - pinnedPosts.length))];
 ---
 
 <BaseLayout title="Home">
@@ -29,7 +29,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 				<DecryptedText text="Dev Blog" href="/blog/" align="right" />
 			</div>
 			{(() => {
-				const blogItems = posts.slice(0, 4).map((post) => ({
+				const blogItems = homePosts.map((post) => ({
 					src: post.data.heroImage!,
 					alt: post.data.heroImageAlt,
 					href: `/blog/${post.id}/`,
@@ -38,6 +38,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 					description: post.data.description,
 					longDescription: post.data.longDescription,
 					date: post.data.pubDate,
+					pinned: post.data.pinned,
 				}));
 				return <Masonry items={blogItems} titleFontSize="1.25rem" descriptionFontSize="1.125rem" descriptionLongFontSize="1rem" reverse />;
 			})()}
@@ -59,6 +60,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 						title: lab.data.title,
 						description: lab.data.description,
 						longDescription: lab.data.longDescription,
+						pinned: lab.data.pinned,
 					}));
 				return <Masonry items={masonryItems} />;
 			})()}

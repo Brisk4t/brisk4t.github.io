@@ -16,6 +16,8 @@ interface MasonryItem {
 	description?: string;
 	longDescription?: string;
 	date?: Date;
+	/** Shows a pin badge in the tile's corner. Ordering is up to the caller. */
+	pinned?: boolean;
 }
 
 interface Props {
@@ -81,7 +83,7 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 			const Card = item.href ? 'a' : 'div';
 			return (
 				<Card
-					class="masonry__item"
+					class:list={['masonry__item', { 'masonry__item--pinned': item.pinned }]}
 					data-key={item.id}
 					data-index={index}
 					href={item.href}
@@ -99,6 +101,13 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 							<img class="masonry__image" src={item.src} alt={item.alt} loading={index < 6 ? 'eager' : 'lazy'} draggable={false} />
 						)}
 						<div class="masonry__overlay" />
+						{item.pinned && (
+							<span class="masonry__pin" title="Pinned" aria-label="Pinned">
+								<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+									<path d="M16 3a1 1 0 0 1 .7 1.7L15.4 6l2.6 5.2 1.3 1.3a1 1 0 0 1-.7 1.7H13v6.3l-1 1.5-1-1.5V14.2H5.8a1 1 0 0 1-.7-1.7l1.3-1.3L9 6 7.3 4.7A1 1 0 0 1 8 3h8Z" />
+								</svg>
+							</span>
+						)}
 						{item.title && <span class="masonry__title">{item.title}</span>}
 						{(item.description || item.longDescription || item.tags?.length) && (
 							<div class="masonry__desc-stack">
@@ -177,7 +186,9 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 			items.forEach((item, index) => {
 				const img = item.querySelector<HTMLImageElement>('.masonry__image');
 				const aspect = img && img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 1;
-				const col = colHeights.indexOf(Math.min(...colHeights));
+				// Column comes from position, not the shortest column, so the slot pattern depends only on
+				// item count — reordering (e.g. pinning) never reshuffles the grid, and the first items fill the top row.
+				const col = index % columns;
 				const x = reverse ? width - columnWidth * (col + 1) : columnWidth * col;
 				const y = colHeights[col];
 
@@ -317,6 +328,19 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
 		-webkit-line-clamp: 2;
+	}
+	.masonry__pin {
+		position: absolute;
+		top: 0.8em;
+		right: 0.8em;
+		display: grid;
+		place-items: center;
+		width: 1.9em;
+		height: 1.9em;
+		transform: rotate(35deg);
+	}
+	.masonry__item--pinned .masonry__title {
+		padding-right: 3em;
 	}
 	.masonry__date {
 		align-self: flex-end;
