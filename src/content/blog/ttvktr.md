@@ -1,6 +1,6 @@
 ---
 title: TTVKTR
-description: Tossed the TV but Kept the Remote?.
+description: Tossed the TV but Kept the Remote?
 longDescription: Repurposing old IR remotes EASILY.
 pubDate: 2026-09-29T12:30:00Z
 heroImage: https://raw.githubusercontent.com/Brisk4t/TossedTheTVKeptTheRemote/main/images/ttvktrcoveredit.png
