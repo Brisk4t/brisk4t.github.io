@@ -23,7 +23,7 @@ const posts = sortPinnedFirst(await getCollection('blog', ({ data }) => !data.dr
 	<div class="split">
 		<section class="col-blog">
 			<div class="section-heading">
-				<DecryptedText text="Dev Blog" href="/blog/" align="right" />
+				<DecryptedText text="Dev Blog" href="/blog/" align="right" centerWhen="(max-width: 800px)" />
 			</div>
 			{(() => {
 				const blogItems = posts.map((post) => ({
@@ -43,7 +43,7 @@ const posts = sortPinnedFirst(await getCollection('blog', ({ data }) => !data.dr
 
 		<section class="col-scrapbook">
 			<div class="section-heading">
-				<FlipTitle text="Scrapbook" href="/lab/" randomizeStartColors />
+				<FlipTitle text="Scrapbook" href="/lab/" centerWhen="(max-width: 800px)" randomizeStartColors />
 			</div>
 			{(() => {
 				const masonryItems = labs

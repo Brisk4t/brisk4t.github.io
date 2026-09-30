@@ -7,19 +7,23 @@ interface Props {
 	href?: string;
 	target?: string;
 	align?: 'left' | 'right';
+	/** Media query under which both strings are centred instead of padded to `align`. */
+	centerWhen?: string;
 	randomizeStartColors?: boolean;
 	class?: string;
 }
 
-const { text, hoverText = 'See all', href, target, align = 'left', randomizeStartColors = false, class: className = '' } = Astro.props;
+const { text, hoverText = 'See all', href, target, align = 'left', centerWhen, randomizeStartColors = false, class: className = '' } = Astro.props;
 
 const columns = Math.max(text.length, hoverText.length);
 // Pad on one side only so both strings start at the same column —
 // otherwise centering each independently shifts "See all" out of
 // alignment with the title whenever the two lengths differ.
-const pad = (value: string) => {
-	const filler = ' '.repeat(columns - value.length);
-	return align === 'right' ? filler + value : value + filler;
+const pad = (value: string, side: 'left' | 'right' | 'center' = align) => {
+	const gap = columns - value.length;
+	if (side === 'center') return ' '.repeat(Math.floor(gap / 2)) + value + ' '.repeat(Math.ceil(gap / 2));
+	const filler = ' '.repeat(gap);
+	return side === 'right' ? filler + value : value + filler;
 };
 
 const paddedText = pad(text).toUpperCase();
@@ -35,6 +39,9 @@ const chars = paddedText.split('');
 	aria-label={text}
 	data-text={paddedText}
 	data-hover-text={paddedHover}
+	data-center-when={centerWhen}
+	data-center-text={centerWhen && pad(text, 'center').toUpperCase()}
+	data-center-hover-text={centerWhen && pad(hoverText, 'center').toUpperCase()}
 	data-randomize-colors={randomizeStartColors ? '1' : '0'}
 >
 	{chars.map((ch, i) => (
@@ -60,8 +67,10 @@ const chars = paddedText.split('');
 		const cells = Array.from(root.querySelectorAll<HTMLElement>('.flip-cell'));
 		if (!cells.length) return;
 
-		const text = (root.dataset.text ?? '').split('');
-		const hoverText = (root.dataset.hoverText ?? '').split('');
+		const centerQuery = root.dataset.centerWhen ? window.matchMedia(root.dataset.centerWhen) : null;
+		const pick = (padded?: string, centered?: string) => ((centerQuery?.matches ? centered : padded) ?? '').split('');
+		const getText = () => pick(root.dataset.text, root.dataset.centerText);
+		const getHoverText = () => pick(root.dataset.hoverText, root.dataset.centerHoverText);
 		const state = cells.map((cell) => cell.dataset.char === ' ' ? ' ' : (cell.dataset.char ?? ' '));
 
 		const showChar = (cell: HTMLElement, ch: string) => (ch === ' ' ? '\u00A0' : ch);
@@ -152,12 +161,18 @@ const chars = paddedText.split('');
 
 		// Entrance: flip in from blank to the title text.
 		cells.forEach((_, i) => (state[i] = ' '));
-		requestAnimationFrame(() => runSequence(text, { scramble: true, stagger: 26, colorizeIndices: pickColorIndices(text) }));
+		requestAnimationFrame(() => {
+			const text = getText();
+			runSequence(text, { scramble: true, stagger: 26, colorizeIndices: pickColorIndices(text) });
+		});
 
-		root.addEventListener('mouseenter', () => runSequence(hoverText, { scramble: true, stagger: 18 }));
+		root.addEventListener('mouseenter', () => runSequence(getHoverText(), { scramble: true, stagger: 18 }));
 		// Re-pick which 3 letters get colored each time the title settles back
 		// to its idle text, instead of reusing the same trio from mount.
-		root.addEventListener('mouseleave', () => runSequence(text, { scramble: true, stagger: 18, colorizeIndices: pickColorIndices(text) }));
+		root.addEventListener('mouseleave', () => {
+			const text = getText();
+			runSequence(text, { scramble: true, stagger: 18, colorizeIndices: pickColorIndices(text) });
+		});
 	}
 
 	document.querySelectorAll<HTMLElement>('.flip-title').forEach(setupFlipTitle);

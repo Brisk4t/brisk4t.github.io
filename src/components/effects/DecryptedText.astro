@@ -8,6 +8,8 @@ interface Props {
 	href?: string;
 	target?: string;
 	align?: 'left' | 'right';
+	/** Media query under which both strings are centred instead of padded to `align`. */
+	centerWhen?: string;
 	speed?: number;
 	characters?: string;
 	class?: string;
@@ -19,6 +21,7 @@ const {
 	href,
 	target,
 	align = 'left',
+	centerWhen,
 	speed = 40,
 	characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*',
 	class: className = '',
@@ -28,9 +31,11 @@ const columns = Math.max(text.length, hoverText.length);
 // Pad on one side only so both strings start at the same column — otherwise
 // centering each independently shifts "SEE ALL" out of alignment with the
 // title whenever the two lengths differ.
-const pad = (value: string) => {
-	const filler = ' '.repeat(columns - value.length);
-	return align === 'right' ? filler + value : value + filler;
+const pad = (value: string, side: 'left' | 'right' | 'center' = align) => {
+	const gap = columns - value.length;
+	if (side === 'center') return ' '.repeat(Math.floor(gap / 2)) + value + ' '.repeat(Math.ceil(gap / 2));
+	const filler = ' '.repeat(gap);
+	return side === 'right' ? filler + value : value + filler;
 };
 
 const paddedText = pad(text).toUpperCase();
@@ -46,6 +51,9 @@ const chars = paddedText.split('');
 	aria-label={text}
 	data-text={paddedText}
 	data-hover-text={paddedHover}
+	data-center-when={centerWhen}
+	data-center-text={centerWhen && pad(text, 'center').toUpperCase()}
+	data-center-hover-text={centerWhen && pad(hoverText, 'center').toUpperCase()}
 	data-speed={speed}
 	data-characters={characters}
 >
@@ -59,8 +67,10 @@ const chars = paddedText.split('');
 		const cells = Array.from(root.querySelectorAll<HTMLElement>('.decrypted-char'));
 		if (!cells.length) return;
 
-		const text = (root.dataset.text ?? '').split('');
-		const hoverText = (root.dataset.hoverText ?? '').split('');
+		const centerQuery = root.dataset.centerWhen ? window.matchMedia(root.dataset.centerWhen) : null;
+		const pick = (padded?: string, centered?: string) => ((centerQuery?.matches ? centered : padded) ?? '').split('');
+		const getText = () => pick(root.dataset.text, root.dataset.centerText);
+		const getHoverText = () => pick(root.dataset.hoverText, root.dataset.centerHoverText);
 		const speed = Number(root.dataset.speed ?? 40);
 		const characters = (root.dataset.characters ?? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*').split('');
 
@@ -100,10 +110,10 @@ const chars = paddedText.split('');
 			}, speed);
 		};
 
-		requestAnimationFrame(() => runDecrypt(text));
+		requestAnimationFrame(() => runDecrypt(getText()));
 
-		root.addEventListener('mouseenter', () => runDecrypt(hoverText));
-		root.addEventListener('mouseleave', () => runDecrypt(text));
+		root.addEventListener('mouseenter', () => runDecrypt(getHoverText()));
+		root.addEventListener('mouseleave', () => runDecrypt(getText()));
 	}
 
 	document.querySelectorAll<HTMLElement>('.decrypted-title').forEach(setupDecryptedText);
