@@ -44,6 +44,13 @@ const items = labs.map((lab) => ({
 	.intro {
 		font-size: 1.25rem;
 		line-height: 1.5;
+		max-width: 75%;
+		margin-left: 8px;
+	}
+	@media (max-width: 640px) {
+		.intro {
+			max-width: none;
+		}
 	}
 	:global(.masonry) {
 		margin-top: 2rem;
