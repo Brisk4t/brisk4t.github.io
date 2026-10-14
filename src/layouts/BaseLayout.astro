@@ -17,6 +17,10 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<!-- Applied before any stylesheet loads, so the first paint (or a page whose CSS/MagnetLines fails to load)
+		     gets the same background that normally sits behind MagnetLines instead of the browser's light default. -->
+		<meta name="color-scheme" content="light dark" />
+		<style is:inline>html { background: Canvas; }</style>
 		<meta name="description" content={description} />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title} · brisk4t</title>

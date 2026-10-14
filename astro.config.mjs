@@ -9,4 +9,11 @@ export default defineConfig({
 	markdown: {
 		processor: unified({ remarkPlugins: [remarkAlert] }),
 	},
+	image: {
+		// Let Astro fetch and optimize remote Markdown images (resize + WebP, width/height, lazy loading)
+		// instead of hotlinking the full-resolution originals.
+		remotePatterns: [{ protocol: 'https' }],
+		// Generate a srcset so small screens download smaller variants.
+		layout: 'constrained',
+	},
 });

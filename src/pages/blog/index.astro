@@ -1,9 +1,14 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import { thumb } from '../../lib/thumb';
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+// Thumbs are 17rem wide, or full width on phones (see .thumb styles).
+const thumbs = await Promise.all(
+	posts.map((post) => (post.data.heroImage ? thumb(post.data.heroImage, 640, '(max-width: 640px) 100vw, 272px') : undefined)),
 );
 ---
 
@@ -11,7 +16,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	<h1>Blog</h1>
 	<ul class="posts">
 		{
-			posts.map((post) => (
+			posts.map((post, i) => (
 				<li>
 					<canvas class="pixel-canvas"></canvas>
 					<a href={`/blog/${post.id}/`}>
@@ -28,7 +33,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 							</ul>
 						</div>
 						{post.data.heroImage && (
-							<img class="thumb" src={post.data.heroImage} alt={post.data.heroImageAlt ?? ''} loading="lazy" />
+							<img class="thumb" {...thumbs[i]} alt={post.data.heroImageAlt ?? ''} loading="lazy" />
 						)}
 					</a>
 				</li>

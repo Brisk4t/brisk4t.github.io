@@ -99,6 +99,8 @@
 			clone.querySelectorAll('script').forEach((el) => el.remove());
 			clone.querySelectorAll('img').forEach((img) => {
 				img.loading = 'eager';
+				// The clone is drawn at a tiny scale, so pick the smallest srcset variant instead of the full-size one.
+				if (img.srcset) img.sizes = '1px';
 				img.addEventListener('load', measure, { once: true });
 			});
 			wrap.replaceChildren(clone);

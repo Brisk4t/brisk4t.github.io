@@ -1,5 +1,7 @@
 ---
 // Ported from https://reactbits.dev/components/masonry
+import { thumb } from '../../lib/thumb';
+
 interface MasonryItem {
 	/** Omit for a solid tile (uses `accent` as the background, square aspect). */
 	src?: string;
@@ -57,6 +59,11 @@ const {
 const normalizedItems: MasonryItem[] = items.map((item, index) =>
 	typeof item === 'string' ? { src: item, alt: `Masonry image ${index + 1}`, id: `m-${index}` } : { alt: `Masonry image ${index + 1}`, id: `m-${index}`, ...item },
 );
+
+// Tiles are at most ~440px wide (single column below 440px container width).
+const thumbs = await Promise.all(
+	normalizedItems.map((item) => (item.src ? thumb(item.src, 480, '(max-width: 480px) 100vw, 440px') : undefined)),
+);
 ---
 
 <div
@@ -98,7 +105,7 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 					)}
 					<div class="masonry__content" style={item.accent ? { background: item.accent } : undefined}>
 						{item.src && (
-							<img class="masonry__image" src={item.src} alt={item.alt} loading={index < 6 ? 'eager' : 'lazy'} draggable={false} />
+							<img class="masonry__image" {...thumbs[index]} alt={item.alt} loading={index < 6 ? 'eager' : 'lazy'} draggable={false} />
 						)}
 						<div class="masonry__overlay" />
 						{item.pinned && (
@@ -172,8 +179,24 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 			}
 		};
 
+		// Tile aspect (width / height) is clamped to this range; images are object-fit: cover, so extremes just crop.
+		const MIN_ASPECT = 2 / 3;
+		const MAX_ASPECT = 2;
+		// Images whose size isn't known yet (still loading, or failed) get the tallest allowed tile as a placeholder.
+		const PLACEHOLDER_ASPECT = MIN_ASPECT;
+		// How long to wait for images of unknown size before laying out with placeholders.
+		const MAX_WAIT_MS = 600;
+
+		const getAspect = (img: HTMLImageElement | null) => {
+			if (!img) return 1;
+			// Prefer the intrinsic size the server rendered, so layout doesn't need the image to download.
+			const w = img.naturalWidth || Number(img.getAttribute('width'));
+			const h = img.naturalHeight || Number(img.getAttribute('height'));
+			if (!w || !h) return PLACEHOLDER_ASPECT;
+			return Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, w / h));
+		};
+
 		let mounted = false;
-		let imagesReady = false;
 
 		const layout = () => {
 			const width = root.getBoundingClientRect().width;
@@ -185,7 +208,7 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 
 			items.forEach((item, index) => {
 				const img = item.querySelector<HTMLImageElement>('.masonry__image');
-				const aspect = img && img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 1;
+				const aspect = getAspect(img);
 				// Column comes from position, not the shortest column, so the slot pattern depends only on
 				// item count — reordering (e.g. pinning) never reshuffles the grid, and the first items fill the top row.
 				const col = index % columns;
@@ -220,33 +243,42 @@ const normalizedItems: MasonryItem[] = items.map((item, index) =>
 			});
 
 			root.style.height = `${Math.max(...colHeights, 0)}px`;
-			if (imagesReady) mounted = true;
+			mounted = true;
 		};
 
-		const images = items.map((item) => item.querySelector<HTMLImageElement>('.masonry__image')).filter((img): img is HTMLImageElement => !!img);
-		let pending = images.length;
-		const onImageSettled = () => {
-			pending -= 1;
-			if (pending <= 0) {
-				imagesReady = true;
-				layout();
-			}
+		// Only images with no server-rendered size are worth waiting for; the rest can be laid out right away.
+		const unsized = items
+			.map((item) => item.querySelector<HTMLImageElement>('.masonry__image'))
+			.filter((img): img is HTMLImageElement => !!img && !img.complete && !(img.getAttribute('width') && img.getAttribute('height')));
+
+		let pending = unsized.length;
+		let waitTimer = 0;
+		// Set once we stop waiting; layout() only flips `mounted` after it actually places the tiles (needs a width).
+		let ready = false;
+		const mount = () => {
+			if (ready) return;
+			ready = true;
+			clearTimeout(waitTimer);
+			layout();
 		};
-		if (!images.length) {
-			imagesReady = true;
-		} else {
-			images.forEach((img) => {
-				if (img.complete) onImageSettled();
-				else {
-					img.addEventListener('load', onImageSettled, { once: true });
-					img.addEventListener('error', onImageSettled, { once: true });
-				}
-			});
-		}
+		unsized.forEach((img) => {
+			const onSettled = () => {
+				pending -= 1;
+				// Before mount: start as soon as everything is in. After: re-flow so the placeholder takes the real shape.
+				if (!ready) {
+					if (pending <= 0) mount();
+				} else if (img.naturalWidth) layout();
+			};
+			img.addEventListener('load', onSettled, { once: true });
+			img.addEventListener('error', onSettled, { once: true });
+		});
 
-		layout();
+		if (pending > 0) waitTimer = window.setTimeout(mount, MAX_WAIT_MS);
+		else mount();
 
-		const resizeObserver = new ResizeObserver(() => layout());
+		const resizeObserver = new ResizeObserver(() => {
+			if (ready) layout();
+		});
 		resizeObserver.observe(root);
 
 		if (scaleOnHover) {
