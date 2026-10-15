@@ -28,13 +28,13 @@ pinned: false
 All you need is $5, an RP2040 and 5 minutes to turn that old, suspiciously sticky T.V. remote into a fully functional _USB Keyboard / Clicker / Thingy_ that you can reprogram on the fly like your favorite **hackerman keyboard**. 
 
 
-![App](https://github.com/Brisk4t/TossedTheTVKeptTheRemote/blob/main/images/TTVKTR_DEMO.gif?raw=true)
+![App](https://raw.githubusercontent.com/Brisk4t/TossedTheTVKeptTheRemote/main/images/TTVKTR_DEMO.gif)
 </div>
 
 
 
 
-![App](https://github.com/Brisk4t/TossedTheTVKeptTheRemote/blob/main/images/ttvktrcoveredit.png?raw=true)
+![App](https://raw.githubusercontent.com/Brisk4t/TossedTheTVKeptTheRemote/main/images/ttvktrcoveredit.png)
 
 
 The firmware receives IR codes from a standard 38 kHz receiver and translates them to USB HID reports based on a JSON configuration stored on the device's filesystem. A browser-based config tool communicates over Web Serial to let you map buttons, learn IR codes, and arrange layouts.
@@ -42,7 +42,7 @@ The firmware receives IR codes from a standard 38 kHz receiver and translates th
 
 ## Features
 
-![App](https://github.com/Brisk4t/TossedTheTVKeptTheRemote/blob/main/images/app.png?raw=true)
+![App](https://raw.githubusercontent.com/Brisk4t/TossedTheTVKeptTheRemote/main/images/app.png)
 
 | Feature | Description |
 |---|---|
@@ -94,7 +94,7 @@ The TTVKTR uses a Raspberry Pi Pico (RP2040) and an IR receiver to read the code
 
 # Config UI
 
-![Customize](https://github.com/Brisk4t/TossedTheTVKeptTheRemote/blob/main/images/customize.png?raw=true)
+![Customize](https://raw.githubusercontent.com/Brisk4t/TossedTheTVKeptTheRemote/main/images/customize.png)
 
 The config UI is deployed to GitHub Pages at **https://brisk4t.github.io/TossedTheTVKeptTheRemote/**. You can also open `web/index.html` locally in any Chromium-based browser (Chrome, Edge) — Web Serial is required.
 
@@ -106,7 +106,7 @@ The config UI is deployed to GitHub Pages at **https://brisk4t.github.io/TossedT
 
 ## Layout editing
 
-![Layouts](https://github.com/Brisk4t/TossedTheTVKeptTheRemote/blob/main/images/layouts.png?raw=true)
+![Layouts](https://raw.githubusercontent.com/Brisk4t/TossedTheTVKeptTheRemote/main/images/layouts.png)
 
 Each layer can have one or more **layouts** — named grids of buttons. Enter edit mode with **Edit Layout** to drag buttons around, add/remove slots, or use **Auto-Add** to rapidly bind IR codes to keys by pressing remote buttons followed by the target keyboard key.
 
@@ -120,7 +120,7 @@ Each layer can have one or more **layouts** — named grids of buttons. Enter ed
 
 ## Combos:
 
-![Combos](https://github.com/Brisk4t/TossedTheTVKeptTheRemote/blob/main/images/combos.png?raw=true)
+![Combos](https://raw.githubusercontent.com/Brisk4t/TossedTheTVKeptTheRemote/main/images/combos.png)
 
 - Modifier chips (Ctrl / Shift / Alt / Win) toggled before capturing a key
 - Multiple steps chained with `→` (e.g. `Ctrl+A → Delete → Tab`)
