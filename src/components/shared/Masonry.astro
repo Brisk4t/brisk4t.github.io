@@ -1,10 +1,11 @@
 ---
 // Ported from https://reactbits.dev/components/masonry
+import type { ImageMetadata } from 'astro';
 import { thumb } from '../../lib/thumb';
 
 interface MasonryItem {
 	/** Omit for a solid tile (uses `accent` as the background, square aspect). */
-	src?: string;
+	src?: string | ImageMetadata;
 	alt?: string;
 	/** Background colour for tiles without an image. */
 	accent?: string;
