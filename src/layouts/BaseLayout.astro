@@ -101,6 +101,30 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 		max-width: 100%;
 		overflow-x: auto;
 	}
+	main article pre.astro-code {
+		padding: 0.9rem 1.1rem;
+		border-radius: 0px;
+		font-size: 0.875rem;
+		line-height: 1.55;
+	}
+	/* ```lang title="file" blocks (see src/lib/shiki-code-title.mjs) */
+	main article figure.code-block {
+		margin: 1em 0;
+		border-radius: 0px;
+		overflow: hidden;
+	}
+	main article figure.code-block pre.astro-code {
+		margin: 0;
+		border-radius: 0;
+	}
+	main article .code-title {
+		/* Slightly lifted from Shiki's default github-dark background (#24292e) so it reads as a tab bar. */
+		background: #1c2024;
+		color: #777e86;
+		padding: 0.4rem 1.1rem;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.8rem;
+	}
 	main article table {
 		display: block;
 		max-width: 100%;
