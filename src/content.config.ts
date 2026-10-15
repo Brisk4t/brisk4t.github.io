@@ -1,9 +1,14 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import type { SchemaContext } from 'astro:content';
+
+// heroImage accepts a remote URL or a public/ path (kept as a string), or a path relative to the
+// .md file (e.g. ./cover.jpg), which resolves to a local image Astro can optimize.
+const heroImage = (image: SchemaContext['image']) => z.union([z.string().regex(/^(https?:\/\/|\/)/), image()]).optional();
 
 const blog = defineCollection({
 	loader: glob({ pattern: '**/*.md', base: './src/content/blog' }),
-	schema: z.object({
+	schema: ({ image }) => z.object({
 		title: z.string(),
 		// Short subtitle shown on the tile by default. Blank frontmatter values parse as null, so accept that too.
 		description: z.string().nullish().transform((v) => v ?? ''),
@@ -12,8 +17,8 @@ const blog = defineCollection({
 		pubDate: z.coerce.date(),
 		updatedDate: z.coerce.date().optional(),
 		tags: z.array(z.string()).default([]),
-		// Path into public/, e.g. /blog/my-post/cover.jpg. Omit for a text-only tile.
-		heroImage: z.string().optional(),
+		// Remote URL, path into public/ (/blog/my-post/cover.jpg), or path next to the post (./cover.jpg). Omit for a text-only tile.
+		heroImage: heroImage(image),
 		heroImageAlt: z.string().optional(),
 		// Useful links shown in the "Links" menu under the table of contents, e.g.
 		// links:
@@ -39,7 +44,7 @@ const blog = defineCollection({
 
 const labs = defineCollection({
 	loader: glob({ pattern: '**/*.md', base: './src/content/labs' }),
-	schema: z.object({
+	schema: ({ image }) => z.object({
 		title: z.string(),
 		// Short subtitle shown on the tile by default. Blank frontmatter values parse as null, so accept that too.
 		description: z.string().nullish().transform((v) => v ?? ''),
@@ -53,8 +58,8 @@ const labs = defineCollection({
 		url: z.string().url().optional(),
 		// Optional accent color for the card on the /lab index (each island can pick its own)
 		accent: z.string().default('#6366f1'),
-		// Path into public/, e.g. /lab/my-lab/cover.svg. Omit for a solid accent-colored tile.
-		heroImage: z.string().optional(),
+		// Remote URL, path into public/ (/lab/my-lab/cover.svg), or path next to the entry (./cover.jpg). Omit for a solid accent-colored tile.
+		heroImage: heroImage(image),
 		heroImageAlt: z.string().optional(),
 		// Pinned entries always show at the top of the masonry grid (newest pinned first), with a pin badge.
 		pinned: z.boolean().default(false),
