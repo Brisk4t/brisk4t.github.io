@@ -53,9 +53,9 @@ Which was good enough, I don't really need most of the other pads to get a simpl
 
 Once I wired that up I had..... 
 
-![Uboot Password Prompt](TODO:)
+![Uboot Password Prompt](./ubootpasswordprompt.png)
 
-**Ugh.**
+### **Ugh.**
 
 # Its Never That Easy
 
@@ -122,7 +122,7 @@ What I can tell you is that these tools are your friends.
 - ubireader
 
 
-and this little helper to clear out the BCH metadata
+and this little helper to strip the BCH metadata from the captured dump:
 
 ```python
 import numpy as np, bchlib
@@ -158,7 +158,13 @@ After finishing the above process, I had 2 things:
 - The plaintext U-Boot interrupt password
 - The entire rootfs filesystem
 
-The second however, told me another annoying piece of information. **The root account no longer had a password**. 
+Let's test out the first one:
+
+![Uboot Success](./ubootcontrol.png)
+
+### BEAUTIFUL.
+
+The second however, told me another annoying piece of information. **The root account no longer had a password**. Dman you l9group and your responsible exploit disclosure!
 
 The only way to get a shell here would be to pass `init=/bin/sh` into the U-Boot boot args.
 
@@ -214,11 +220,12 @@ ttyAM0::respawn:-/bin/sh # Uncomment this
 #ttyAM0::respawn:-/usr/sbin/eco_login.sh # HAH CAN'T STOP ME NOW
 ```
 
-And so, at long last:
+# And so, at long last:
 
-![U-Boot Image](TODO:)
+**Finally A ROOT SHELL**
 
+![Root Shell](./success.png)
 
 Now I can sleep well, knowing that I have successfully broken into a 20 year old ARM device that can't run most browsers!
 
-*I need to touch grass*
+*I need to touch grass.*
