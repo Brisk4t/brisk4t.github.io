@@ -9,6 +9,7 @@ tags: [cryptography, esp32, ble]
 links:
   - {label: ToothPaste Github, url: https://github.com/Brisk4t/ToothPaste}
   - {label: ToothPaste WebApp, url: https://www.toothpasteapp.com/}
+  - {label: Hackaday Article, url: https://hackaday.com/2026/11/03/toothpaste-goes-where-your-password-manager-doesnt/}
 pinned: true
 ---
 
