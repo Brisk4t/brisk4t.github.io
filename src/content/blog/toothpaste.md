@@ -17,6 +17,7 @@ pinned: true
 >
 >\- Someone defintely 
 
+<a href="https://github.com/Brisk4t/ToothPaste">
 <div align="center">
   <h1 style="text-align: center; margin: 10;">
     <span style="display: inline-flex; align-items: center; gap: 10px;">
@@ -28,6 +29,7 @@ pinned: true
     </span>
   </h1>
 </div>
+</a>
 
 <div align="center" style="text-align: center; margin: 20px">
   <img src="https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white&logoSize=auto" alt="C++"/>
@@ -42,6 +44,8 @@ pinned: true
 <p align="center" style="text-align: center; font-size: 1.2em;">
   <strong>ToothPaste</strong> allows a user to transmit <strong>AES-256</strong> encrypted keyboard and mouse commands to any USB-compatible device wirelessly, without the need for specialized drivers or extensive set-up using WEB-BLE, a Cryptographic IC and an ESP32-S3.
 </p>
+
+::github{repo="Brisk4t/ToothPaste"}
 
 ![ToothPaste Website About Page Thumbnail](https://www.toothpasteapp.com/ToothPaste_Cover_V2.png)
 <br/>

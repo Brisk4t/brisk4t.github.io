@@ -15,6 +15,7 @@
     "@astrojs/markdown-remark": "^7.2.4",
     "astro": "^7.2.4",
     "node-html-parser": "^9.0.4",
+    "remark-directive": "^4.0.0",
     "remark-github-blockquote-alert": "^2.1.0",
     "three": "^0.186.0"
   }

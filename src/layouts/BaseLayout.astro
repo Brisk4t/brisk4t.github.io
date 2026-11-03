@@ -125,6 +125,55 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 		font-size: 0.8rem;
 	}
+	/* Standalone GitHub repo links (see src/lib/remark-github-card.mjs) */
+	main article .gh-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin: 1.25em 0;
+		padding: 1rem;
+		background: light-dark(#f6f8fa, #151b23);
+		border: 1px solid light-dark(#d0d7de, #30363d);
+		border-radius: 6px;
+		color: light-dark(#59636e, #9198a1);
+		font-size: 0.875rem;
+		text-decoration: none;
+		transition: border-color 0.15s;
+	}
+	main article .gh-card:hover {
+		border-color: light-dark(#8c959f, #6e7681);
+	}
+	main article .gh-card svg {
+		flex-shrink: 0;
+	}
+	main article .gh-card-title {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		color: light-dark(#0969da, #4493f8);
+		font-size: 1rem;
+	}
+	main article .gh-card-logo {
+		display: flex;
+		margin-left: auto;
+		color: light-dark(#1f2328, #f0f6fc);
+	}
+	main article .gh-card-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem;
+		font-size: 0.75rem;
+	}
+	main article .gh-card-meta > span {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+	main article .gh-card-lang {
+		width: 0.75rem;
+		height: 0.75rem;
+		border-radius: 50%;
+	}
 	main article table {
 		display: block;
 		max-width: 100%;

@@ -3,12 +3,14 @@ import { defineConfig } from 'astro/config';
 import { unified } from '@astrojs/markdown-remark';
 import { remarkAlert } from 'remark-github-blockquote-alert';
 import { shikiCodeTitle } from './src/lib/shiki-code-title.mjs';
+import remarkDirective from 'remark-directive';
+import { remarkGithubCard } from './src/lib/remark-github-card.mjs';
 
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://brisk4t.github.io',
 	markdown: {
-		processor: unified({ remarkPlugins: [remarkAlert] }),
+		processor: unified({ remarkPlugins: [remarkAlert, remarkDirective, remarkGithubCard] }),
 		shikiConfig: {
 			// Show ```lang title="file" as a filename bar above the block.
 			transformers: [shikiCodeTitle()],
