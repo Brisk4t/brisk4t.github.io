@@ -43,6 +43,29 @@ const { title, description = 'Brisk4t — portfolio, blog, and UI scrapbook.' } 
 			<p>&copy; {new Date().getFullYear()} Brisk4t</p>
 		</footer>
 		<SiteTerminal />
+		<script>
+			// GitHub repo cards (src/lib/remark-github-card.mjs) are rendered at build time, so their
+			// star/fork counts go stale between deploys. Refresh them from the GitHub API on load;
+			// on any failure (offline, rate limit) the build-time numbers just stay.
+			const format = new Intl.NumberFormat('en', { notation: 'compact' });
+			const cards = document.querySelectorAll<HTMLElement>('[data-gh-repo]');
+			const repos = new Set(Array.from(cards, (card) => card.dataset.ghRepo!));
+			for (const repo of repos) {
+				fetch(`https://api.github.com/repos/${repo}`, { headers: { Accept: 'application/vnd.github+json' } })
+					.then((res) => (res.ok ? res.json() : null))
+					.then((data) => {
+						if (!data) return;
+						for (const card of cards) {
+							if (card.dataset.ghRepo !== repo) continue;
+							const stars = card.querySelector('[data-gh-stars]');
+							const forks = card.querySelector('[data-gh-forks]');
+							if (stars) stars.textContent = format.format(data.stargazers_count);
+							if (forks) forks.textContent = format.format(data.forks_count);
+						}
+					})
+					.catch(() => {});
+			}
+		</script>
 	</body>
 </html>
 

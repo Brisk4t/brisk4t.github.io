@@ -7,7 +7,8 @@
  *
  * into a GitHub-style repository card (name, description, language, stars, forks).
  * Repo details are fetched from the GitHub API at build time; set GITHUB_TOKEN to avoid
- * the unauthenticated rate limit. If the fetch fails the card still renders with just the name.
+ * the unauthenticated rate limit. If the fetch fails the card renders with placeholder counts.
+ * Star/fork counts are refreshed in the browser by a script in BaseLayout.astro.
  *
  * Any other directive is turned back into the text it was written as, so prose like
  * "ratio a:b" isn't swallowed by remark-directive.
@@ -85,15 +86,17 @@ function renderCard(url, owner, name, data) {
 		const color = LANGUAGE_COLORS[data.language] ?? '#8b949e';
 		meta.push(`<span><span class="gh-card-lang" style="background:${color}"></span>${escape(data.language)}</span>`);
 	}
-	if (data) {
-		meta.push(`<span>${icon(ICONS.star)}${compact(data.stargazers_count)}</span>`);
-		meta.push(`<span>${icon(ICONS.fork)}${compact(data.forks_count)}</span>`);
-	}
+	// Always emit the count slots (with a placeholder if the build-time fetch failed) so the
+	// client script still has somewhere to put live numbers.
+	meta.push(`<span>${icon(ICONS.star)}<span data-gh-stars>${data ? compact(data.stargazers_count) : '–'}</span></span>`);
+	meta.push(`<span>${icon(ICONS.fork)}<span data-gh-forks>${data ? compact(data.forks_count) : '–'}</span></span>`);
+	// data-gh-repo lets the client script in BaseLayout.astro refresh the counts on page load,
+	// since the build-time numbers go stale until the next deploy.
 	return (
-		`<a class="gh-card" href="${escape(url)}">` +
+		`<a class="gh-card" href="${escape(url)}" data-gh-repo="${escape(`${owner}/${name}`)}">` +
 		`<span class="gh-card-title">${icon(ICONS.repo)}<span>${escape(owner)}/<strong>${escape(name)}</strong></span><span class="gh-card-logo">${icon(ICONS.github, 24)}</span></span>` +
 		(data?.description ? `<span class="gh-card-desc">${escape(data.description)}</span>` : '') +
-		(meta.length ? `<span class="gh-card-meta">${meta.join('')}</span>` : '') +
+		`<span class="gh-card-meta">${meta.join('')}</span>` +
 		`</a>`
 	);
 }
